@@ -53,7 +53,8 @@ namespace HospitalAPI.Middleware
                     Success = false,
                     StatusCode = context.Response.StatusCode,
                     Message = "An unexpected error occurred."
-                };
+            }
+            ;
 
                 var json = JsonSerializer.Serialize(response);
 

@@ -9,6 +9,13 @@ using HospitalAPI.Validators;
 using Microsoft.EntityFrameworkCore;
 using HospitalAPI.Middleware;
 
+
+using HospitalAPI.Configurations;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+
+
 namespace HospitalAPI
 {
     public class Program
@@ -21,6 +28,33 @@ namespace HospitalAPI
             builder.Services.AddControllers();
 
 
+            builder.Services.Configure<JwtSettings>(
+            builder.Configuration.GetSection("Jwt"));
+
+            var jwtSettings = builder.Configuration
+    .GetSection("Jwt")
+    .Get<JwtSettings>();
+
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+
+            ValidIssuer = jwtSettings!.Issuer,
+            ValidAudience = jwtSettings.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(jwtSettings.Key))
+        };
+    });
+
+            builder.Services.AddAuthorization();
+
+
             builder.Services.AddFluentValidationAutoValidation();
 
             builder.Services.AddValidatorsFromAssemblyContaining<CreateDepartmentDtoValidator>();
@@ -31,7 +65,7 @@ namespace HospitalAPI
                   builder.Configuration.GetConnectionString("DefaultConnection")));
 
 
-            builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+            
 
 
 
@@ -48,6 +82,9 @@ namespace HospitalAPI
 
             builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
             builder.Services.AddScoped<IAppointmentService, AppointmentService>();
+
+            builder.Services.AddScoped<IUserRepository, UserRepository>();
+            builder.Services.AddScoped<IUserService, UserService>();
 
 
 
@@ -75,6 +112,8 @@ namespace HospitalAPI
             app.UseMiddleware<ExceptionMiddleware>();
 
             app.UseHttpsRedirection();
+
+            app.UseAuthentication();
 
             app.UseAuthorization();
 
