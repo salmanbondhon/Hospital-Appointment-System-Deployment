@@ -1,21 +1,18 @@
 ﻿using HospitalAPI.Enums;
 
-namespace HospitalAPI.Models
+namespace HospitalAPI.DTOs
 {
-    public class Appointment
+    public class AppointmentDto
     {
-
-
-
         public int Id { get; set; }
 
         public int DoctorId { get; set; }
 
-        public Doctor? Doctor { get; set; }
+        public string DoctorName { get; set; } = string.Empty;
 
         public int PatientId { get; set; }
 
-        public Patient? Patient { get; set; }
+        public string PatientName { get; set; } = string.Empty;
 
         public DateTime AppointmentDate { get; set; }
 

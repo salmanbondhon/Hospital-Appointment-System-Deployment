@@ -1,28 +1,27 @@
 ﻿using HospitalAPI.DTOs;
 using HospitalAPI.Interfaces;
 using HospitalAPI.Models;
+using AutoMapper;
 
 namespace HospitalAPI.Services
 {
     public class DepartmentService : IDepartmentService
     {
         private readonly IDepartmentRepository _repository;
+        private readonly IMapper _mapper;
 
-        public DepartmentService(IDepartmentRepository repository)
+        public DepartmentService(IDepartmentRepository repository, IMapper mapper)
         {
             _repository = repository;
+            _mapper = mapper;
         }
 
         public async Task<IEnumerable<DepartmentDto>> GetAllAsync()
         {
             var departments = await _repository.GetAllAsync();
 
-            return departments.Select(d => new DepartmentDto
-            {
-                Id = d.Id,
-                Name = d.Name,
-                Description = d.Description
-            });
+            return _mapper.Map<IEnumerable<DepartmentDto>>(departments);
+           
         }
 
         public async Task<DepartmentDto?> GetByIdAsync(int id)
@@ -32,31 +31,17 @@ namespace HospitalAPI.Services
             if (department == null)
                 return null;
 
-            return new DepartmentDto
-            {
-                Id = department.Id,
-                Name = department.Name,
-                Description = department.Description
-            };
+            return _mapper.Map<DepartmentDto>(department);
         }
 
         public async Task<DepartmentDto> AddAsync(CreateDepartmentDto dto)
         {
-            var department = new Department
-            {
-                Name = dto.Name,
-                Description = dto.Description
-            };
+            var department = _mapper.Map<Department>(dto);
 
             await _repository.AddAsync(department);
             await _repository.SaveChangesAsync();
 
-            return new DepartmentDto
-            {
-                Id = department.Id,
-                Name = department.Name,
-                Description = department.Description
-            };
+            return _mapper.Map<DepartmentDto>(department);
         }
 
         public async Task<bool> UpdateAsync(int id, UpdateDepartmentDto dto)
@@ -66,8 +51,7 @@ namespace HospitalAPI.Services
             if (department == null)
                 return false;
 
-            department.Name = dto.Name;
-            department.Description = dto.Description;
+            _mapper.Map(dto, department);
 
             await _repository.UpdateAsync(department);
             await _repository.SaveChangesAsync();
