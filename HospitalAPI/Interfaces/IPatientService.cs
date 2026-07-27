@@ -1,4 +1,6 @@
-﻿using HospitalAPI.DTOs;
+﻿
+
+using HospitalAPI.DTOs;
 
 namespace HospitalAPI.Interfaces
 {
@@ -10,8 +12,7 @@ namespace HospitalAPI.Interfaces
 
         Task<PatientDto> AddAsync(CreatePatientDto dto);
 
-        Task<bool> UpdateAsync(int id, UpdatePatientDto dto);
-
-        Task<bool> DeleteAsync(int id);
+        Task UpdateAsync(int id, UpdatePatientDto dto);
+        Task DeleteAsync(int id);
     }
 }

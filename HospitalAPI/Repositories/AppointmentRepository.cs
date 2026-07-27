@@ -58,5 +58,17 @@ namespace HospitalAPI.Repositories
                 a.DoctorId == doctorId &&
                 a.AppointmentDate == appointmentDate);
         }
+
+
+        public async Task<bool> IsDoctorAvailableForUpdateAsync(
+    int appointmentId,
+    int doctorId,
+    DateTime appointmentDate)
+        {
+            return !await _context.Appointments.AnyAsync(a =>
+                a.Id != appointmentId &&
+                a.DoctorId == doctorId &&
+                a.AppointmentDate == appointmentDate);
+        }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using HospitalAPI.DTOs;
+using HospitalAPI.Exceptions;
 using HospitalAPI.Interfaces;
 using HospitalAPI.Models;
 
@@ -43,32 +44,32 @@ namespace HospitalAPI.Services
             return _mapper.Map<PatientDto>(patient);
         }
 
-        public async Task<bool> UpdateAsync(int id, UpdatePatientDto dto)
+        public async Task UpdateAsync(int id, UpdatePatientDto dto)
         {
             var patient = await _repository.GetByIdAsync(id);
 
             if (patient == null)
-                return false;
+            {
+                throw new BusinessException("Patient not found.");
+            }
 
             _mapper.Map(dto, patient);
 
             await _repository.UpdateAsync(patient);
             await _repository.SaveChangesAsync();
-
-            return true;
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task DeleteAsync(int id)
         {
             var patient = await _repository.GetByIdAsync(id);
 
             if (patient == null)
-                return false;
+            {
+                throw new BusinessException("Patient not found.");
+            }
 
             await _repository.DeleteAsync(patient);
             await _repository.SaveChangesAsync();
-
-            return true;
         }
     }
 }

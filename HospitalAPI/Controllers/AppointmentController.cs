@@ -1,5 +1,6 @@
 ﻿using HospitalAPI.DTOs;
 using HospitalAPI.Interfaces;
+using HospitalAPI.Responses;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HospitalAPI.Controllers
@@ -51,24 +52,28 @@ namespace HospitalAPI.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, UpdateAppointmentDto dto)
         {
-            var updated = await _service.UpdateAsync(id, dto);
+            await _service.UpdateAsync(id, dto);
 
-            if (!updated)
-                return NotFound();
-
-            return NoContent();
+            return Ok(new ApiResponse<object>
+            {
+                Success = true,
+                Message = "Appointment updated successfully.",
+                Data = null
+            });
         }
 
         // DELETE: api/Appointment/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var deleted = await _service.DeleteAsync(id);
+            await _service.DeleteAsync(id);
 
-            if (!deleted)
-                return NotFound();
-
-            return NoContent();
+            return Ok(new ApiResponse<object>
+            {
+                Success = true,
+                Message = "Appointment deleted successfully.",
+                Data = null
+            });
         }
     }
 }

@@ -17,5 +17,6 @@ namespace HospitalAPI.Interfaces
         Task SaveChangesAsync();
 
         Task<bool> IsDoctorAvailableAsync(int doctorId, DateTime appointmentDate);
+        Task<bool> IsDoctorAvailableForUpdateAsync(int appointmentId, int doctorId, DateTime appointmentDate);
     }
 }

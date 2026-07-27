@@ -10,9 +10,9 @@ namespace HospitalAPI.Interfaces
 
         Task<DepartmentDto> AddAsync(CreateDepartmentDto dto);
 
-        Task<bool> UpdateAsync(int id, UpdateDepartmentDto dto);
+        Task UpdateAsync(int id, UpdateDepartmentDto dto);
 
-        Task<bool> DeleteAsync(int id);
-    
-}
+        Task DeleteAsync(int id);
+
+    }
 }

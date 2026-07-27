@@ -2,6 +2,7 @@
 using HospitalAPI.DTOs;
 using HospitalAPI.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using HospitalAPI.Responses;
 
 
 
@@ -24,7 +25,14 @@ namespace HospitalAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAll()
         {
-            return Ok(await _service.GetAllAsync());
+            var departments = await _service.GetAllAsync();
+
+            return Ok(new ApiResponse<IEnumerable<DepartmentDto>>
+            {
+                Success = true,
+                Message = "Departments retrieved successfully.",
+                Data = departments
+            });
         }
 
         // GET: api/Department/1
@@ -36,7 +44,12 @@ namespace HospitalAPI.Controllers
             if (department == null)
                 return NotFound();
 
-            return Ok(department);
+            return Ok(new ApiResponse<DepartmentDto>
+            {
+                Success = true,
+                Message = "Department retrieved successfully.",
+                Data = department
+            });
         }
 
         // POST: api/Department
@@ -47,34 +60,40 @@ namespace HospitalAPI.Controllers
         {
             var department = await _service.AddAsync(dto);
 
-            return CreatedAtAction(
-                nameof(GetById),
-                new { id = department.Id },
-                department);
+            return Ok(new ApiResponse<DepartmentDto>
+            {
+                Success = true,
+                Message = "Department created successfully.",
+                Data = department
+            });
         }
 
         // PUT: api/Department/1
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, UpdateDepartmentDto dto)
         {
-            var updated = await _service.UpdateAsync(id, dto);
+            await _service.UpdateAsync(id, dto);
 
-            if (!updated)
-                return NotFound();
-
-            return NoContent();
+            return Ok(new ApiResponse<object>
+            {
+                Success = true,
+                Message = "Department updated successfully.",
+                Data = null
+            });
         }
 
         // DELETE: api/Department/1
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var deleted = await _service.DeleteAsync(id);
+            await _service.DeleteAsync(id);
 
-            if (!deleted)
-                return NotFound();
-
-            return NoContent();
+            return Ok(new ApiResponse<object>
+            {
+                Success = true,
+                Message = "Department deleted successfully.",
+                Data = null
+            });
         }
     }
 }

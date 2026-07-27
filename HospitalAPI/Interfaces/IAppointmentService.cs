@@ -10,8 +10,8 @@ namespace HospitalAPI.Interfaces
 
         Task<AppointmentDto> AddAsync(CreateAppointmentDto dto);
 
-        Task<bool> UpdateAsync(int id, UpdateAppointmentDto dto);
+        Task UpdateAsync(int id, UpdateAppointmentDto dto);
 
-        Task<bool> DeleteAsync(int id);
+        Task DeleteAsync(int id);
     }
 }
