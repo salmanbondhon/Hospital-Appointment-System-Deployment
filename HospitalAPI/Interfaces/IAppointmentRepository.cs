@@ -8,6 +8,10 @@ namespace HospitalAPI.Interfaces
 
         Task<Appointment?> GetByIdAsync(int id);
 
+        Task<IEnumerable<Appointment>> GetByDoctorIdAsync(int doctorId);
+
+        Task<IEnumerable<Appointment>> GetByPatientIdAsync(int patientId);
+
         Task AddAsync(Appointment appointment);
 
         Task UpdateAsync(Appointment appointment);
@@ -17,6 +21,10 @@ namespace HospitalAPI.Interfaces
         Task SaveChangesAsync();
 
         Task<bool> IsDoctorAvailableAsync(int doctorId, DateTime appointmentDate);
-        Task<bool> IsDoctorAvailableForUpdateAsync(int appointmentId, int doctorId, DateTime appointmentDate);
+
+        Task<bool> IsDoctorAvailableForUpdateAsync(
+            int appointmentId,
+            int doctorId,
+            DateTime appointmentDate);
     }
 }

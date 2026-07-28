@@ -2,6 +2,7 @@
 using HospitalAPI.Interfaces;
 using HospitalAPI.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace HospitalAPI.Repositories
 {
@@ -28,6 +29,24 @@ namespace HospitalAPI.Repositories
                 .Include(a => a.Doctor)
                 .Include(a => a.Patient)
                 .FirstOrDefaultAsync(a => a.Id == id);
+        }
+
+        public async Task<IEnumerable<Appointment>> GetByDoctorIdAsync(int doctorId)
+        {
+            return await _context.Appointments
+                .Include(a => a.Doctor)
+                .Include(a => a.Patient)
+                .Where(a => a.DoctorId == doctorId)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Appointment>> GetByPatientIdAsync(int patientId)
+        {
+            return await _context.Appointments
+                .Include(a => a.Doctor)
+                .Include(a => a.Patient)
+                .Where(a => a.PatientId == patientId)
+                .ToListAsync();
         }
 
         public async Task AddAsync(Appointment appointment)

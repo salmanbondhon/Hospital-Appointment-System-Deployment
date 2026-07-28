@@ -29,5 +29,12 @@ namespace HospitalAPI.Models
 
         // Navigation Property
         public Department? Department { get; set; }
+
+
+        // Foreign Key to User
+        public int UserId { get; set; }
+
+        // Navigation Property
+        public User User { get; set; } = null!;
     }
 }

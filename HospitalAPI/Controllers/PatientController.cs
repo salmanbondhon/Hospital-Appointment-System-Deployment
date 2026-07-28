@@ -2,9 +2,11 @@
 using HospitalAPI.Interfaces;
 using HospitalAPI.Responses;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace HospitalAPI.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class PatientController : ControllerBase
@@ -17,6 +19,7 @@ namespace HospitalAPI.Controllers
         }
 
         // GET: api/Patient
+        [Authorize(Roles = "Admin,Doctor")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -25,6 +28,7 @@ namespace HospitalAPI.Controllers
         }
 
         // GET: api/Patient/5
+        [Authorize(Roles = "Admin,Doctor")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -37,6 +41,7 @@ namespace HospitalAPI.Controllers
         }
 
         // POST: api/Patient
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> Create(CreatePatientDto dto)
         {
@@ -49,6 +54,7 @@ namespace HospitalAPI.Controllers
         }
 
         // PUT: api/Patient/5
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, UpdatePatientDto dto)
         {
@@ -63,6 +69,7 @@ namespace HospitalAPI.Controllers
         }
 
         // DELETE: api/Patient/5
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {

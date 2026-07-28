@@ -19,6 +19,10 @@ namespace HospitalAPI.Repositories
             return await _context.Users
                 .FirstOrDefaultAsync(u => u.Email == email);
         }
+        public async Task<User?> GetByIdAsync(int id)
+        {
+            return await _context.Users.FindAsync(id);
+        }
 
         public async Task AddAsync(User user)
         {

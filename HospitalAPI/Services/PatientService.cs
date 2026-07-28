@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using HospitalAPI.DTOs;
+using HospitalAPI.Enums;
 using HospitalAPI.Exceptions;
 using HospitalAPI.Interfaces;
 using HospitalAPI.Models;
@@ -9,11 +10,16 @@ namespace HospitalAPI.Services
     public class PatientService : IPatientService
     {
         private readonly IPatientRepository _repository;
+        private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
 
-        public PatientService(IPatientRepository repository, IMapper mapper)
+        public PatientService(
+      IPatientRepository repository,
+      IUserRepository userRepository,
+      IMapper mapper)
         {
             _repository = repository;
+            _userRepository = userRepository;
             _mapper = mapper;
         }
 
@@ -36,6 +42,28 @@ namespace HospitalAPI.Services
 
         public async Task<PatientDto> AddAsync(CreatePatientDto dto)
         {
+            // Check if user exists
+            var user = await _userRepository.GetByIdAsync(dto.UserId);
+
+            if (user == null)
+            {
+                throw new BusinessException("User not found.");
+            }
+
+            // User must have Patient role
+            if (user.Role != UserRole.Patient)
+            {
+                throw new BusinessException("Selected user is not a patient.");
+            }
+
+            // Prevent duplicate patient profile
+            var existingPatient = await _repository.GetByUserIdAsync(dto.UserId);
+
+            if (existingPatient != null)
+            {
+                throw new BusinessException("This user already has a patient profile.");
+            }
+
             var patient = _mapper.Map<Patient>(dto);
 
             await _repository.AddAsync(patient);

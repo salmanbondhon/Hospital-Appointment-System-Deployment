@@ -29,6 +29,20 @@ namespace HospitalAPI.Data
             modelBuilder.Entity<Doctor>()
                 .Property(d => d.ConsultationFee)
                 .HasPrecision(18, 2);
+
+
+            modelBuilder.Entity<Patient>()
+                .HasOne(p => p.User)
+                .WithOne(u => u.Patient)
+                .HasForeignKey<Patient>(p => p.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+
+            modelBuilder.Entity<Doctor>()
+     .HasOne(d => d.User)
+     .WithOne(u => u.Doctor)
+     .HasForeignKey<Doctor>(d => d.UserId)
+     .OnDelete(DeleteBehavior.NoAction);
         }
     }
 }

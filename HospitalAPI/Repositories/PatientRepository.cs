@@ -23,7 +23,11 @@ namespace HospitalAPI.Repositories
         {
             return await _context.Patients.FirstOrDefaultAsync(p => p.Id == id);
         }
-
+        public async Task<Patient?> GetByUserIdAsync(int userId)
+        {
+            return await _context.Patients
+                .FirstOrDefaultAsync(p => p.UserId == userId);
+        }
         public async Task AddAsync(Patient patient)
         {
             await _context.Patients.AddAsync(patient);

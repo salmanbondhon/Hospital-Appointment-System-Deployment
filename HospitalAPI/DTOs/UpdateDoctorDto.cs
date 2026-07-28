@@ -18,5 +18,7 @@
         public string AvailableTo { get; set; } = string.Empty;
 
         public int DepartmentId { get; set; }
+
+        public int UserId { get; set; }
     }
 }

@@ -4,6 +4,7 @@ using HospitalAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HospitalAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260727201033_LinkPatientWithUser")]
+    partial class LinkPatientWithUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -116,15 +119,9 @@ namespace HospitalAPI.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("DepartmentId");
-
-                    b.HasIndex("UserId")
-                        .IsUnique();
 
                     b.ToTable("Doctors");
                 });
@@ -228,15 +225,7 @@ namespace HospitalAPI.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("HospitalAPI.Models.User", "User")
-                        .WithOne("Doctor")
-                        .HasForeignKey("HospitalAPI.Models.Doctor", "UserId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
                     b.Navigation("Department");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("HospitalAPI.Models.Patient", b =>
@@ -257,8 +246,6 @@ namespace HospitalAPI.Migrations
 
             modelBuilder.Entity("HospitalAPI.Models.User", b =>
                 {
-                    b.Navigation("Doctor");
-
                     b.Navigation("Patient");
                 });
 #pragma warning restore 612, 618

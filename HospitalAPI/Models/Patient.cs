@@ -15,5 +15,9 @@
         public string Address { get; set; } = string.Empty;
 
         public string BloodGroup { get; set; } = string.Empty;
+
+        public int UserId { get; set; }
+
+        public User User { get; set; }
     }
 }

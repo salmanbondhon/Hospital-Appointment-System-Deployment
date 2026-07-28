@@ -3,12 +3,14 @@ using HospitalAPI.DTOs;
 using HospitalAPI.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using HospitalAPI.Responses;
+using Microsoft.AspNetCore.Authorization;
 
 
 
 
 namespace HospitalAPI.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class DepartmentController : ControllerBase
@@ -53,6 +55,7 @@ namespace HospitalAPI.Controllers
         }
 
         // POST: api/Department
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -69,6 +72,7 @@ namespace HospitalAPI.Controllers
         }
 
         // PUT: api/Department/1
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, UpdateDepartmentDto dto)
         {
@@ -83,6 +87,7 @@ namespace HospitalAPI.Controllers
         }
 
         // DELETE: api/Department/1
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {

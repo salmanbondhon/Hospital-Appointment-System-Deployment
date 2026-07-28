@@ -2,6 +2,7 @@
 {
     public class CreatePatientDto
     {
+        public int UserId { get; set; }
         public string FullName { get; set; } = string.Empty;
 
         public int Age { get; set; }

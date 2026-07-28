@@ -14,6 +14,7 @@ namespace HospitalAPI.Repositories
             _context = context;
         }
 
+       
         public async Task<IEnumerable<Doctor>> GetAllAsync()
         {
             return await _context.Doctors
@@ -26,6 +27,13 @@ namespace HospitalAPI.Repositories
             return await _context.Doctors
                 .Include(d => d.Department)
                 .FirstOrDefaultAsync(d => d.Id == id);
+        }
+
+        public async Task<Doctor?> GetByUserIdAsync(int userId)
+        {
+            return await _context.Doctors
+                .Include(d => d.Department)
+                .FirstOrDefaultAsync(d => d.UserId == userId);
         }
 
         public async Task AddAsync(Doctor doctor)

@@ -25,13 +25,40 @@ namespace HospitalAPI.Services
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<AppointmentDto>> GetAllAsync()
+        public async Task<IEnumerable<AppointmentDto>> GetAllAsync(int userId, string role)
         {
-            var appointments = await _appointmentRepository.GetAllAsync();
+            // Admin -> All appointments
+            if (role == "Admin")
+            {
+                var appointments = await _appointmentRepository.GetAllAsync();
+                return _mapper.Map<IEnumerable<AppointmentDto>>(appointments);
+            }
 
-            return _mapper.Map<IEnumerable<AppointmentDto>>(appointments);
+            // Doctor -> Only their appointments
+            if (role == "Doctor")
+            {
+                var doctor = await _doctorRepository.GetByUserIdAsync(userId);
+
+                if (doctor == null)
+                    throw new BusinessException("Doctor profile not found.");
+
+                var appointments = await _appointmentRepository
+                    .GetByDoctorIdAsync(doctor.Id);
+
+                return _mapper.Map<IEnumerable<AppointmentDto>>(appointments);
+            }
+
+            // Patient -> Only their appointments
+            var patient = await _patientRepository.GetByUserIdAsync(userId);
+
+            if (patient == null)
+                throw new BusinessException("Patient profile not found.");
+
+            var patientAppointments = await _appointmentRepository
+                .GetByPatientIdAsync(patient.Id);
+
+            return _mapper.Map<IEnumerable<AppointmentDto>>(patientAppointments);
         }
-
         public async Task<AppointmentDto?> GetByIdAsync(int id)
         {
             var appointment = await _appointmentRepository.GetByIdAsync(id);
@@ -42,7 +69,7 @@ namespace HospitalAPI.Services
             return _mapper.Map<AppointmentDto>(appointment);
         }
 
-        public async Task<AppointmentDto> AddAsync(CreateAppointmentDto dto)
+        public async Task<AppointmentDto> AddAsync(CreateAppointmentDto dto, int userId)
         {
             // Prevent past appointments*3e
             if (dto.AppointmentDate < DateTime.Now)
@@ -58,7 +85,7 @@ namespace HospitalAPI.Services
                 throw new BusinessException("Doctor not found.");
 
             // Validate Patient
-            var patient = await _patientRepository.GetByIdAsync(dto.PatientId);
+            var patient = await _patientRepository.GetByUserIdAsync(userId);
 
             if (patient == null)
                 throw new BusinessException("Patient not found.");
@@ -77,7 +104,11 @@ namespace HospitalAPI.Services
 
 
 
+            // Create Appointment
             var appointment = _mapper.Map<Appointment>(dto);
+
+            // IMPORTANT: Link the appointment to the logged-in patient
+            appointment.PatientId = patient.Id;
 
             await _appointmentRepository.AddAsync(appointment);
             await _appointmentRepository.SaveChangesAsync();

@@ -19,5 +19,10 @@ namespace HospitalAPI.Models
         public string PasswordHash { get; set; } = string.Empty;
 
         public UserRole Role { get; set; }
+
+        public Patient? Patient { get; set; }
+
+        // ADD THIS
+        public Doctor? Doctor { get; set; }
     }
 }
