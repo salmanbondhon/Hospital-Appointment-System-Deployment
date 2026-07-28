@@ -39,7 +39,12 @@ namespace HospitalAPI.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var appointment = await _service.GetByIdAsync(id);
+            int userId = int.Parse(
+                User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            string role = User.FindFirst(ClaimTypes.Role)!.Value;
+
+            var appointment = await _service.GetByIdAsync(id, userId, role);
 
             if (appointment == null)
                 return NotFound();
@@ -76,7 +81,12 @@ namespace HospitalAPI.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, UpdateAppointmentDto dto)
         {
-            await _service.UpdateAsync(id, dto);
+            int userId = int.Parse(
+                User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            string role = User.FindFirst(ClaimTypes.Role)!.Value;
+
+            await _service.UpdateAsync(id, dto, userId, role);
 
             return Ok(new ApiResponse<object>
             {
@@ -87,11 +97,16 @@ namespace HospitalAPI.Controllers
         }
 
         // DELETE: api/Appointment/5
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Doctor")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            await _service.DeleteAsync(id);
+            int userId = int.Parse(
+                User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            string role = User.FindFirst(ClaimTypes.Role)!.Value;
+
+            await _service.DeleteAsync(id, userId, role);
 
             return Ok(new ApiResponse<object>
             {

@@ -59,12 +59,41 @@ namespace HospitalAPI.Services
 
             return _mapper.Map<IEnumerable<AppointmentDto>>(patientAppointments);
         }
-        public async Task<AppointmentDto?> GetByIdAsync(int id)
+        public async Task<AppointmentDto?> GetByIdAsync(int id, int userId, string role)
         {
             var appointment = await _appointmentRepository.GetByIdAsync(id);
 
             if (appointment == null)
                 return null;
+
+            // Admin can access everything
+            if (role == "Admin")
+            {
+                return _mapper.Map<AppointmentDto>(appointment);
+            }
+
+            // Doctor can access only their appointments
+            if (role == "Doctor")
+            {
+                var doctor = await _doctorRepository.GetByUserIdAsync(userId);
+
+                if (doctor == null)
+                    throw new BusinessException("Doctor profile not found.");
+
+                if (appointment.DoctorId != doctor.Id)
+                    throw new BusinessException("You are not authorized to view this appointment.");
+
+                return _mapper.Map<AppointmentDto>(appointment);
+            }
+
+            // Patient can access only their appointments
+            var patient = await _patientRepository.GetByUserIdAsync(userId);
+
+            if (patient == null)
+                throw new BusinessException("Patient profile not found.");
+
+            if (appointment.PatientId != patient.Id)
+                throw new BusinessException("You are not authorized to view this appointment.");
 
             return _mapper.Map<AppointmentDto>(appointment);
         }
@@ -118,7 +147,11 @@ namespace HospitalAPI.Services
             return _mapper.Map<AppointmentDto>(appointment);
         }
 
-        public async Task UpdateAsync(int id, UpdateAppointmentDto dto)
+        public async Task UpdateAsync(
+    int id,
+    UpdateAppointmentDto dto,
+    int userId,
+    string role)
         {
             // Prevent past appointments
             if (dto.AppointmentDate < DateTime.Now)
@@ -135,9 +168,9 @@ namespace HospitalAPI.Services
             }
 
             // Validate Doctor
-            var doctor = await _doctorRepository.GetByIdAsync(dto.DoctorId);
+            var selectedDoctor = await _doctorRepository.GetByIdAsync(dto.DoctorId);
 
-            if (doctor == null)
+            if (selectedDoctor == null)
             {
                 throw new BusinessException("Doctor not found.");
             }
@@ -162,6 +195,21 @@ namespace HospitalAPI.Services
                 throw new BusinessException("Doctor already has an appointment at this time.");
             }
 
+
+
+            // Admin can update everything
+            if (role == "Doctor")
+            {
+                var loggedInDoctor = await _doctorRepository.GetByUserIdAsync(userId);
+
+                if (loggedInDoctor == null)
+                    throw new BusinessException("Doctor profile not found.");
+
+                if (appointment.DoctorId != loggedInDoctor.Id)
+                    throw new BusinessException("You are not authorized to update this appointment.");
+            }
+
+
             // Update appointment
             _mapper.Map(dto, appointment);
 
@@ -171,7 +219,10 @@ namespace HospitalAPI.Services
             
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task DeleteAsync(
+    int id,
+    int userId,
+    string role)
         {
             var appointment = await _appointmentRepository.GetByIdAsync(id);
 
@@ -180,10 +231,21 @@ namespace HospitalAPI.Services
                 throw new BusinessException("Appointment not found.");
             }
 
+            // Doctor can delete only their own appointments
+            if (role == "Doctor")
+            {
+                var loggedInDoctor = await _doctorRepository.GetByUserIdAsync(userId);
+
+                if (loggedInDoctor == null)
+                    throw new BusinessException("Doctor profile not found.");
+
+                if (appointment.DoctorId != loggedInDoctor.Id)
+                    throw new BusinessException("You are not authorized to delete this appointment.");
+            }
+
+            // Admin reaches here automatically
             await _appointmentRepository.DeleteAsync(appointment);
             await _appointmentRepository.SaveChangesAsync();
-
-           
         }
     }
 }
