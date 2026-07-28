@@ -11,6 +11,6 @@ namespace HospitalAPI.DTOs
 
         public string ProblemDescription { get; set; } = string.Empty;
 
-        public AppointmentStatus Status { get; set; }
+        
     }
 }

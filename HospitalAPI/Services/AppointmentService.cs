@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
 using HospitalAPI.DTOs;
+using HospitalAPI.Enums;
 using HospitalAPI.Exceptions;
 using HospitalAPI.Interfaces;
 using HospitalAPI.Models;
+using System.Numerics;
 
 namespace HospitalAPI.Services
 {
@@ -106,12 +108,29 @@ namespace HospitalAPI.Services
                 throw new BusinessException("Appointment date cannot be in the past.");
             }
 
+            if (!IsValidAppointmentSlot(dto.AppointmentDate))
+            {
+                throw new BusinessException(
+                    "Appointments can only be booked in 30-minute intervals.");
+            }
 
             // Validate Doctor
             var doctor = await _doctorRepository.GetByIdAsync(dto.DoctorId);
 
             if (doctor == null)
                 throw new BusinessException("Doctor not found.");
+
+            // Check doctor's working hours
+            bool isWorking = IsDoctorWorking(
+                dto.AppointmentDate,
+                doctor.AvailableFrom,
+                doctor.AvailableTo);
+
+            if (!isWorking)
+            {
+                throw new BusinessException(
+                    $"Doctor is available only between {doctor.AvailableFrom} and {doctor.AvailableTo}");
+            }
 
             // Validate Patient
             var patient = await _patientRepository.GetByUserIdAsync(userId);
@@ -135,6 +154,9 @@ namespace HospitalAPI.Services
 
             // Create Appointment
             var appointment = _mapper.Map<Appointment>(dto);
+            appointment.PatientId = patient.Id;
+
+            appointment.Status = AppointmentStatus.Pending;
 
             // IMPORTANT: Link the appointment to the logged-in patient
             appointment.PatientId = patient.Id;
@@ -159,6 +181,12 @@ namespace HospitalAPI.Services
                 throw new BusinessException("Appointment date cannot be in the past.");
             }
 
+            if (!IsValidAppointmentSlot(dto.AppointmentDate))
+            {
+                throw new BusinessException(
+                    "Appointments can only be booked in 30-minute intervals.");
+            }
+
             // Check if appointment exists
             var appointment = await _appointmentRepository.GetByIdAsync(id);
 
@@ -173,6 +201,17 @@ namespace HospitalAPI.Services
             if (selectedDoctor == null)
             {
                 throw new BusinessException("Doctor not found.");
+            }
+
+            bool isWorking = IsDoctorWorking(
+    dto.AppointmentDate,
+    selectedDoctor.AvailableFrom,
+    selectedDoctor.AvailableTo);
+
+            if (!isWorking)
+            {
+                throw new BusinessException(
+                    $"Doctor is available only between {selectedDoctor.AvailableFrom} and {selectedDoctor.AvailableTo}");
             }
 
             // Validate Patient
@@ -246,6 +285,135 @@ namespace HospitalAPI.Services
             // Admin reaches here automatically
             await _appointmentRepository.DeleteAsync(appointment);
             await _appointmentRepository.SaveChangesAsync();
+        }
+
+
+        public async Task ApproveAppointmentAsync(
+    int appointmentId,
+    int userId,
+    string role)
+        {
+            var appointment = await _appointmentRepository
+                .GetByIdAsync(appointmentId);
+
+            if (appointment == null)
+                throw new BusinessException("Appointment not found.");
+
+            // Only doctor assigned to this appointment can approve it
+            if (role == "Doctor")
+            {
+                var doctor = await _doctorRepository.GetByUserIdAsync(userId);
+
+                if (doctor == null)
+                    throw new BusinessException("Doctor profile not found.");
+
+                if (appointment.DoctorId != doctor.Id)
+                    throw new BusinessException("You are not authorized.");
+            }
+
+            if (appointment.Status != AppointmentStatus.Pending)
+                throw new BusinessException("Only pending appointments can be approved.");
+
+            appointment.Status = AppointmentStatus.Approved;
+
+            await _appointmentRepository.UpdateAsync(appointment);
+            await _appointmentRepository.SaveChangesAsync();
+        }
+
+
+
+        public async Task CompleteAppointmentAsync(
+    int appointmentId,
+    int userId,
+    string role)
+        {
+            var appointment = await _appointmentRepository.GetByIdAsync(appointmentId);
+
+            if (appointment == null)
+                throw new BusinessException("Appointment not found.");
+
+            // Doctor authorization
+            if (role == "Doctor")
+            {
+                var doctor = await _doctorRepository.GetByUserIdAsync(userId);
+
+                if (doctor == null)
+                    throw new BusinessException("Doctor profile not found.");
+
+                if (appointment.DoctorId != doctor.Id)
+                    throw new BusinessException("You are not authorized.");
+            }
+
+            // Business rule
+            if (appointment.Status != AppointmentStatus.Approved)
+                throw new BusinessException("Only approved appointments can be completed.");
+
+            appointment.Status = AppointmentStatus.Completed;
+
+            await _appointmentRepository.UpdateAsync(appointment);
+            await _appointmentRepository.SaveChangesAsync();
+        }
+
+
+        public async Task CancelAppointmentAsync(
+    int appointmentId,
+    int userId,
+    string role)
+        {
+            var appointment = await _appointmentRepository.GetByIdAsync(appointmentId);
+
+            if (appointment == null)
+                throw new BusinessException("Appointment not found.");
+
+            // Doctor authorization
+            if (role == "Doctor")
+            {
+                var doctor = await _doctorRepository.GetByUserIdAsync(userId);
+
+                if (doctor == null)
+                    throw new BusinessException("Doctor profile not found.");
+
+                if (appointment.DoctorId != doctor.Id)
+                    throw new BusinessException("You are not authorized.");
+            }
+
+            // Business Rule
+            if (appointment.Status == AppointmentStatus.Completed)
+            {
+                throw new BusinessException("Completed appointments cannot be cancelled.");
+            }
+
+            if (appointment.Status == AppointmentStatus.Cancelled)
+            {
+                throw new BusinessException("Appointment is already cancelled.");
+            }
+
+            appointment.Status = AppointmentStatus.Cancelled;
+
+            await _appointmentRepository.UpdateAsync(appointment);
+            await _appointmentRepository.SaveChangesAsync();
+        }
+
+
+        private bool IsDoctorWorking(
+    DateTime appointmentDate,
+    string availableFrom,
+    string availableTo)
+        {
+            TimeSpan appointmentTime = appointmentDate.TimeOfDay;
+
+            TimeSpan from = TimeSpan.Parse(availableFrom);
+            TimeSpan to = TimeSpan.Parse(availableTo);
+
+            return appointmentTime >= from &&
+                   appointmentTime <= to;
+        }
+
+        private bool IsValidAppointmentSlot(DateTime appointmentDate)
+        {
+            return (appointmentDate.Minute == 0 ||
+                    appointmentDate.Minute == 30)
+                   && appointmentDate.Second == 0;
         }
     }
 }

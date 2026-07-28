@@ -1,0 +1,118 @@
+﻿using AutoMapper;
+using HospitalAPI.DTOs;
+using HospitalAPI.Exceptions;
+using HospitalAPI.Interfaces;
+using HospitalAPI.Models;
+
+namespace HospitalAPI.Services
+{
+    public class DoctorLeaveService : IDoctorLeaveService
+    {
+        private readonly IDoctorLeaveRepository _leaveRepository;
+        private readonly IDoctorRepository _doctorRepository;
+        private readonly IMapper _mapper;
+
+        public DoctorLeaveService(
+            IDoctorLeaveRepository leaveRepository,
+            IDoctorRepository doctorRepository,
+            IMapper mapper)
+        {
+            _leaveRepository = leaveRepository;
+            _doctorRepository = doctorRepository;
+            _mapper = mapper;
+        }
+
+        public async Task<IEnumerable<DoctorLeaveDto>> GetAllAsync()
+        {
+            var leaves = await _leaveRepository.GetAllAsync();
+
+            return _mapper.Map<IEnumerable<DoctorLeaveDto>>(leaves);
+        }
+
+        public async Task<IEnumerable<DoctorLeaveDto>> GetMyLeavesAsync(int userId)
+        {
+            var doctor = await _doctorRepository.GetByUserIdAsync(userId);
+
+            if (doctor == null)
+                throw new BusinessException("Doctor profile not found.");
+
+            var leaves = await _leaveRepository.GetByDoctorIdAsync(doctor.Id);
+
+            return _mapper.Map<IEnumerable<DoctorLeaveDto>>(leaves);
+        }
+
+        public async Task<DoctorLeaveDto> CreateLeaveAsync(
+    CreateLeaveDto dto,
+    int userId)
+        {
+            var doctor = await _doctorRepository.GetByUserIdAsync(userId);
+
+            if (doctor == null)
+                throw new BusinessException("Doctor profile not found.");
+
+            if (dto.StartDate.Date < DateTime.Today)
+                throw new BusinessException("Leave cannot start in the past.");
+
+            if (dto.EndDate.Date < dto.StartDate.Date)
+                throw new BusinessException("End date must be after start date.");
+
+            var leave = _mapper.Map<DoctorLeave>(dto);
+
+            leave.DoctorId = doctor.Id;
+
+            // Waiting for admin approval
+            leave.IsApproved = false;
+
+            await _leaveRepository.AddAsync(leave);
+            await _leaveRepository.SaveChangesAsync();
+
+            leave = await _leaveRepository.GetByIdAsync(leave.Id);
+
+            return _mapper.Map<DoctorLeaveDto>(leave);
+        }
+
+        public async Task ApproveLeaveAsync(int leaveId)
+        {
+            var leave = await _leaveRepository.GetByIdAsync(leaveId);
+
+            if (leave == null)
+                throw new BusinessException("Leave not found.");
+
+            if (leave.IsApproved)
+                throw new BusinessException("Leave already approved.");
+
+            leave.IsApproved = true;
+
+            await _leaveRepository.UpdateAsync(leave);
+            await _leaveRepository.SaveChangesAsync();
+        }
+
+
+        public async Task DeleteLeaveAsync(
+    int leaveId,
+    int userId,
+    string role)
+        {
+            var leave = await _leaveRepository.GetByIdAsync(leaveId);
+
+            if (leave == null)
+                throw new BusinessException("Leave not found.");
+
+            if (role == "Doctor")
+            {
+                var doctor = await _doctorRepository.GetByUserIdAsync(userId);
+
+                if (doctor == null)
+                    throw new BusinessException("Doctor profile not found.");
+
+                if (leave.DoctorId != doctor.Id)
+                    throw new BusinessException("You are not authorized.");
+            }
+
+            await _leaveRepository.DeleteAsync(leave);
+            await _leaveRepository.SaveChangesAsync();
+        }
+
+
+    }
+}

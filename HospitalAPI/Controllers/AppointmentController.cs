@@ -115,5 +115,62 @@ namespace HospitalAPI.Controllers
                 Data = null
             });
         }
+
+        [Authorize(Roles = "Admin,Doctor")]
+        [HttpPut("{id}/approve")]
+        public async Task<IActionResult> ApproveAppointment(int id)
+        {
+            int userId = int.Parse(
+                User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            string role = User.FindFirst(ClaimTypes.Role)!.Value;
+
+            await _service.ApproveAppointmentAsync(id, userId, role);
+
+            return Ok(new ApiResponse<object>
+            {
+                Success = true,
+                Message = "Appointment approved successfully.",
+                Data = null
+            });
+        }
+
+
+        [Authorize(Roles = "Admin,Doctor")]
+        [HttpPut("{id}/complete")]
+        public async Task<IActionResult> CompleteAppointment(int id)
+        {
+            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            string role = User.FindFirst(ClaimTypes.Role)!.Value;
+
+            await _service.CompleteAppointmentAsync(id, userId, role);
+
+            return Ok(new ApiResponse<object>
+            {
+                Success = true,
+                Message = "Appointment completed successfully.",
+                Data = null
+            });
+        }
+
+
+        [Authorize(Roles = "Admin,Doctor")]
+        [HttpPut("{id}/cancel")]
+        public async Task<IActionResult> CancelAppointment(int id)
+        {
+            int userId = int.Parse(
+                User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            string role = User.FindFirst(ClaimTypes.Role)!.Value;
+
+            await _service.CancelAppointmentAsync(id, userId, role);
+
+            return Ok(new ApiResponse<object>
+            {
+                Success = true,
+                Message = "Appointment cancelled successfully.",
+                Data = null
+            });
+        }
     }
 }

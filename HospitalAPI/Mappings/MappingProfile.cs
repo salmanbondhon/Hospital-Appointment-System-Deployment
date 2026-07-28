@@ -42,6 +42,12 @@ namespace HospitalAPI.Mappings
             CreateMap<CreateAppointmentDto, Appointment>();
 
             CreateMap<UpdateAppointmentDto, Appointment>();
+
+            CreateMap<DoctorLeave, DoctorLeaveDto>()
+    .ForMember(dest => dest.DoctorName,
+        opt => opt.MapFrom(src => src.Doctor.FullName));
+
+            CreateMap<CreateLeaveDto, DoctorLeave>();
         }
     }
 }

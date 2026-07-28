@@ -88,6 +88,8 @@ namespace HospitalAPI
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<IUserService, UserService>();
 
+            builder.Services.AddScoped<IDoctorLeaveRepository, DoctorLeaveRepository>();
+            builder.Services.AddScoped<IDoctorLeaveService, DoctorLeaveService>();
 
 
             builder.Services.AddAutoMapper(typeof(MappingProfile));

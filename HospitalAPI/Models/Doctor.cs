@@ -36,5 +36,6 @@ namespace HospitalAPI.Models
 
         // Navigation Property
         public User User { get; set; } = null!;
+        public ICollection<DoctorLeave> DoctorLeaves { get; set; } = new List<DoctorLeave>();
     }
 }

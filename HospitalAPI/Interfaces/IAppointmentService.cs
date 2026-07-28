@@ -13,5 +13,10 @@ namespace HospitalAPI.Interfaces
         Task UpdateAsync(int id, UpdateAppointmentDto dto, int userId, string role);
 
         Task DeleteAsync(int id, int userId, string role);
+        Task ApproveAppointmentAsync(int appointmentId, int userId, string role);
+
+        Task CompleteAppointmentAsync(int appointmentId, int userId, string role);
+
+        Task CancelAppointmentAsync(int appointmentId, int userId, string role);
     }
 }
