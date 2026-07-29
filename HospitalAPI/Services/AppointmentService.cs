@@ -13,20 +13,24 @@ namespace HospitalAPI.Services
         private readonly IAppointmentRepository _appointmentRepository;
         private readonly IDoctorRepository _doctorRepository;
         private readonly IPatientRepository _patientRepository;
+        private readonly IDoctorLeaveRepository _doctorLeaveRepository;
         private readonly IMapper _mapper;
 
+
+
         public AppointmentService(
-            IAppointmentRepository appointmentRepository,
-            IDoctorRepository doctorRepository,
-            IPatientRepository patientRepository,
-            IMapper mapper)
+       IAppointmentRepository appointmentRepository,
+       IDoctorRepository doctorRepository,
+       IPatientRepository patientRepository,
+       IDoctorLeaveRepository doctorLeaveRepository,
+       IMapper mapper)
         {
             _appointmentRepository = appointmentRepository;
             _doctorRepository = doctorRepository;
             _patientRepository = patientRepository;
+            _doctorLeaveRepository = doctorLeaveRepository;
             _mapper = mapper;
         }
-
         public async Task<IEnumerable<AppointmentDto>> GetAllAsync(int userId, string role)
         {
             // Admin -> All appointments
@@ -119,6 +123,18 @@ namespace HospitalAPI.Services
 
             if (doctor == null)
                 throw new BusinessException("Doctor not found.");
+
+
+            var onLeave = await _doctorLeaveRepository
+    .IsDoctorOnLeaveAsync(
+        doctor.Id,
+        dto.AppointmentDate);
+
+            if (onLeave)
+            {
+                throw new BusinessException(
+                    "Doctor is on approved leave.");
+            }
 
             // Check doctor's working hours
             bool isWorking = IsDoctorWorking(
@@ -214,6 +230,17 @@ namespace HospitalAPI.Services
                     $"Doctor is available only between {selectedDoctor.AvailableFrom} and {selectedDoctor.AvailableTo}");
             }
 
+
+            var onLeave = await _doctorLeaveRepository
+    .IsDoctorOnLeaveAsync(
+        selectedDoctor.Id,
+        dto.AppointmentDate);
+
+            if (onLeave)
+            {
+                throw new BusinessException(
+                    "Doctor is on approved leave.");
+            }
             // Validate Patient
             var patient = await _patientRepository.GetByIdAsync(dto.PatientId);
 

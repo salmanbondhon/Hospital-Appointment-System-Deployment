@@ -56,6 +56,18 @@ namespace HospitalAPI.Services
             if (dto.EndDate.Date < dto.StartDate.Date)
                 throw new BusinessException("End date must be after start date.");
 
+
+            bool hasOverlap = await _leaveRepository
+    .HasOverlappingLeaveAsync(
+        doctor.Id,
+        dto.StartDate,
+        dto.EndDate);
+
+            if (hasOverlap)
+            {
+                throw new BusinessException(
+                    "Leave overlaps with an existing leave request.");
+            }
             var leave = _mapper.Map<DoctorLeave>(dto);
 
             leave.DoctorId = doctor.Id;

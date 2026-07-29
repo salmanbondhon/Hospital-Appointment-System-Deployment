@@ -66,5 +66,16 @@ namespace HospitalAPI.Repositories
                 appointmentDate.Date >= l.StartDate.Date &&
                 appointmentDate.Date <= l.EndDate.Date);
         }
+
+        public async Task<bool> HasOverlappingLeaveAsync(
+    int doctorId,
+    DateTime startDate,
+    DateTime endDate)
+        {
+            return await _context.DoctorLeaves.AnyAsync(l =>
+                l.DoctorId == doctorId &&
+                startDate <= l.EndDate &&
+                endDate >= l.StartDate);
+        }
     }
 }

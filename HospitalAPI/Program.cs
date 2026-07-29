@@ -91,6 +91,11 @@ namespace HospitalAPI
             builder.Services.AddScoped<IDoctorLeaveRepository, DoctorLeaveRepository>();
             builder.Services.AddScoped<IDoctorLeaveService, DoctorLeaveService>();
 
+            builder.Services.AddScoped<IPrescriptionRepository, PrescriptionRepository>();
+            builder.Services.AddScoped<IPrescriptionService, PrescriptionService>();
+
+
+
 
             builder.Services.AddAutoMapper(typeof(MappingProfile));
 

@@ -19,5 +19,10 @@ namespace HospitalAPI.Interfaces
         Task SaveChangesAsync();
 
         Task<bool> IsDoctorOnLeaveAsync(int doctorId, DateTime appointmentDate);
+
+        Task<bool> HasOverlappingLeaveAsync(
+    int doctorId,
+    DateTime startDate,
+    DateTime endDate);
     }
 }

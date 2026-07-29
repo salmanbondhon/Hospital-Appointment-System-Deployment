@@ -17,6 +17,7 @@ namespace HospitalAPI.Models
 
         public Patient? Patient { get; set; }
 
+        public Prescription? Prescription { get; set; }
         public DateTime AppointmentDate { get; set; }
 
         public string ProblemDescription { get; set; } = string.Empty;
