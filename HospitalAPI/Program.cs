@@ -94,8 +94,9 @@ namespace HospitalAPI
             builder.Services.AddScoped<IPrescriptionRepository, PrescriptionRepository>();
             builder.Services.AddScoped<IPrescriptionService, PrescriptionService>();
 
+            builder.Services.AddScoped<IMedicalRecordService, MedicalRecordService>();
 
-
+            builder.Services.AddScoped<IDashboardService, DashboardService>();
 
             builder.Services.AddAutoMapper(typeof(MappingProfile));
 

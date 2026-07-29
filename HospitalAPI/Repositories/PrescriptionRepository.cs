@@ -66,6 +66,19 @@ namespace HospitalAPI.Repositories
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<Prescription>>
+GetPatientHistoryAsync(int patientId)
+        {
+            return await _context.Prescriptions
+                .Include(p => p.Appointment)
+                    .ThenInclude(a => a.Doctor)
+                .Include(p => p.Appointment)
+                    .ThenInclude(a => a.Patient)
+                .Where(p => p.Appointment.PatientId == patientId)
+                .OrderByDescending(p => p.Appointment.AppointmentDate)
+                .ToListAsync();
+        }
+
         public async Task AddAsync(Prescription prescription)
         {
             await _context.Prescriptions.AddAsync(prescription);
@@ -87,5 +100,6 @@ namespace HospitalAPI.Repositories
         {
             await _context.SaveChangesAsync();
         }
+        
     }
 }

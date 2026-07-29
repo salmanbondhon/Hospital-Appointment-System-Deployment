@@ -14,6 +14,7 @@ namespace HospitalAPI.Interfaces
 
         Task<IEnumerable<Prescription>> GetByPatientIdAsync(int patientId);
 
+        Task<IEnumerable<Prescription>> GetPatientHistoryAsync(int patientId);
         Task AddAsync(Prescription prescription);
 
         Task UpdateAsync(Prescription prescription);
@@ -21,5 +22,7 @@ namespace HospitalAPI.Interfaces
         Task DeleteAsync(Prescription prescription);
 
         Task SaveChangesAsync();
+
+        
     }
 }
