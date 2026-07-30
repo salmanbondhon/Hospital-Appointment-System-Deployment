@@ -50,6 +50,18 @@ namespace HospitalAPI.Mappings
                     opt => opt.MapFrom(src => src.Appointment!.Patient!.FullName));
 
 
+            //Payment
+            CreateMap<CreatePaymentDto, Payment>();
+
+            CreateMap<UpdatePaymentDto, Payment>();
+
+            CreateMap<Payment, PaymentDto>()
+                .ForMember(dest => dest.PatientName,
+                    opt => opt.MapFrom(src => src.Appointment!.Patient!.FullName))
+                .ForMember(dest => dest.DoctorName,
+                    opt => opt.MapFrom(src => src.Appointment!.Doctor!.FullName));
+
+
             CreateMap<CreateAppointmentDto, Appointment>();
 
             CreateMap<UpdateAppointmentDto, Appointment>();

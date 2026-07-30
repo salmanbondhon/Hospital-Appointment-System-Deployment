@@ -22,6 +22,8 @@ namespace HospitalAPI.Models
 
         public string ProblemDescription { get; set; } = string.Empty;
 
+        public Payment? Payment { get; set; }
+
         public AppointmentStatus Status { get; set; }
     }
 }

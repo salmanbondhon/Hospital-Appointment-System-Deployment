@@ -112,6 +112,11 @@ namespace HospitalAPI
 
             builder.Services.AddScoped<IDashboardService, DashboardService>();
 
+            builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+            builder.Services.AddScoped<IPaymentService, PaymentService>();
+
+
+
             builder.Services.AddAutoMapper(typeof(MappingProfile));
 
             // Add services to the container.

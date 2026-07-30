@@ -23,6 +23,8 @@ namespace HospitalAPI.Data
         public DbSet<DoctorLeave> DoctorLeaves { get; set; }
         public DbSet<Prescription> Prescriptions { get; set; }
 
+        public DbSet<Payment> Payments { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -58,6 +60,22 @@ namespace HospitalAPI.Data
     .WithOne(a => a.Prescription)
     .HasForeignKey<Prescription>(p => p.AppointmentId)
     .OnDelete(DeleteBehavior.Cascade);
+
+
+
+
+            modelBuilder.Entity<Appointment>()
+      .HasOne(a => a.Payment)
+      .WithOne(p => p.Appointment)
+      .HasForeignKey<Payment>(p => p.AppointmentId)
+      .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Payment>()
+                .Property(p => p.Amount)
+                .HasPrecision(18, 2);
+
+
+
         }
     }
 }
