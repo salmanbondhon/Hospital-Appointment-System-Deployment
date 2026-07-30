@@ -41,7 +41,7 @@ namespace HospitalAPI.Controllers
         }
 
         // POST: api/Patient
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Patient")]
         [HttpPost]
         public async Task<IActionResult> Create(CreatePatientDto dto)
         {

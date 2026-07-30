@@ -37,6 +37,9 @@ namespace HospitalAPI
     .GetSection("Jwt")
     .Get<JwtSettings>();
 
+
+
+
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -53,6 +56,17 @@ namespace HospitalAPI
                 Encoding.UTF8.GetBytes(jwtSettings.Key))
         };
     });
+
+
+            builder.Services.Configure<EmailSettings>(
+            builder.Configuration.GetSection("EmailSettings"));
+
+            builder.Services.AddScoped<IEmailService, EmailService>();
+
+
+
+
+
 
             builder.Services.AddAuthorization();
 

@@ -13,20 +13,23 @@ namespace HospitalAPI.Services
         private readonly IAppointmentRepository _appointmentRepository;
         private readonly IDoctorRepository _doctorRepository;
         private readonly IPatientRepository _patientRepository;
+        private readonly IEmailService _emailService;
         private readonly IMapper _mapper;
 
         public PrescriptionService(
-            IPrescriptionRepository prescriptionRepository,
-            IAppointmentRepository appointmentRepository,
-            IDoctorRepository doctorRepository,
-            IPatientRepository patientRepository,
-            IMapper mapper)
+     IPrescriptionRepository prescriptionRepository,
+     IAppointmentRepository appointmentRepository,
+     IDoctorRepository doctorRepository,
+     IPatientRepository patientRepository,
+     IMapper mapper,
+     IEmailService emailService)
         {
             _prescriptionRepository = prescriptionRepository;
             _appointmentRepository = appointmentRepository;
             _doctorRepository = doctorRepository;
             _patientRepository = patientRepository;
             _mapper = mapper;
+            _emailService = emailService;
         }
 
         // ==========================
@@ -154,7 +157,21 @@ namespace HospitalAPI.Services
             prescription = await _prescriptionRepository
                 .GetByAppointmentIdAsync(dto.AppointmentId);
 
-            return _mapper.Map<PrescriptionDto>(prescription!);
+            if (prescription?.Appointment?.Patient?.User == null ||
+                prescription.Appointment.Doctor == null)
+            {
+                throw new BusinessException("Prescription data is incomplete.");
+            }
+
+            await _emailService.SendEmailAsync(
+                prescription.Appointment.Patient.User.Email,
+                "Your Prescription is Ready",
+                EmailTemplateService.PrescriptionCreated(
+                    prescription.Appointment.Patient.FullName,
+                    prescription.Appointment.Doctor.FullName,
+                    prescription.Appointment.AppointmentDate));
+
+            return _mapper.Map<PrescriptionDto>(prescription);
         }
 
         // ==========================

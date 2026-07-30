@@ -26,9 +26,10 @@ namespace HospitalAPI.Repositories
         public async Task<Appointment?> GetByIdAsync(int id)
         {
             return await _context.Appointments
-                .Include(a => a.Doctor)
-                .Include(a => a.Patient)
-                .FirstOrDefaultAsync(a => a.Id == id);
+     .Include(a => a.Doctor)
+     .Include(a => a.Patient)
+         .ThenInclude(p => p!.User)
+     .FirstOrDefaultAsync(a => a.Id == id);
         }
 
         public async Task<IEnumerable<Appointment>> GetByDoctorIdAsync(int doctorId)

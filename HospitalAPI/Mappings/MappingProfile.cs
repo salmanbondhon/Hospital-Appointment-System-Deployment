@@ -45,9 +45,9 @@ namespace HospitalAPI.Mappings
 
             CreateMap<Prescription, PrescriptionDto>()
                 .ForMember(dest => dest.DoctorName,
-                    opt => opt.MapFrom(src => src.Appointment.Doctor.FullName))
+                    opt => opt.MapFrom(src => src.Appointment!.Doctor!.FullName))
                 .ForMember(dest => dest.PatientName,
-                    opt => opt.MapFrom(src => src.Appointment.Patient.FullName));
+                    opt => opt.MapFrom(src => src.Appointment!.Patient!.FullName));
 
 
             CreateMap<CreateAppointmentDto, Appointment>();

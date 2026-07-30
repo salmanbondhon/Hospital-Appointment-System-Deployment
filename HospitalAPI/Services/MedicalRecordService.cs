@@ -41,8 +41,8 @@ namespace HospitalAPI.Services
 
             return prescriptions.Select(p => new MedicalRecordDto
             {
-                AppointmentDate = p.Appointment.AppointmentDate,
-                DoctorName = p.Appointment.Doctor.FullName,
+                AppointmentDate = p.Appointment!.AppointmentDate,
+                DoctorName = p.Appointment.Doctor!.FullName,
                 Diagnosis = p.Diagnosis,
                 Medicines = p.Medicines,
                 Notes = p.Notes

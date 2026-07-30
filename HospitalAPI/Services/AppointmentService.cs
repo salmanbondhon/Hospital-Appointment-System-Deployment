@@ -14,22 +14,25 @@ namespace HospitalAPI.Services
         private readonly IDoctorRepository _doctorRepository;
         private readonly IPatientRepository _patientRepository;
         private readonly IDoctorLeaveRepository _doctorLeaveRepository;
+        private readonly IEmailService _emailService;
         private readonly IMapper _mapper;
 
 
 
         public AppointmentService(
-       IAppointmentRepository appointmentRepository,
-       IDoctorRepository doctorRepository,
-       IPatientRepository patientRepository,
-       IDoctorLeaveRepository doctorLeaveRepository,
-       IMapper mapper)
+     IAppointmentRepository appointmentRepository,
+     IDoctorRepository doctorRepository,
+     IPatientRepository patientRepository,
+     IDoctorLeaveRepository doctorLeaveRepository,
+     IMapper mapper,
+     IEmailService emailService)
         {
             _appointmentRepository = appointmentRepository;
             _doctorRepository = doctorRepository;
             _patientRepository = patientRepository;
             _doctorLeaveRepository = doctorLeaveRepository;
             _mapper = mapper;
+            _emailService = emailService;
         }
         public async Task<IEnumerable<AppointmentDto>> GetAllAsync(int userId, string role)
         {
@@ -179,6 +182,19 @@ namespace HospitalAPI.Services
 
             await _appointmentRepository.AddAsync(appointment);
             await _appointmentRepository.SaveChangesAsync();
+
+            // Send confirmation email
+            var body = EmailTemplateService.AppointmentBooked(
+     patient.FullName,
+     doctor.FullName,
+     doctor.Department?.Name,
+     appointment.AppointmentDate,
+     appointment.Status.ToString());
+
+            await _emailService.SendEmailAsync(
+                patient.User!.Email,
+                "Appointment Booked Successfully",
+                body);
 
             appointment = await _appointmentRepository.GetByIdAsync(appointment.Id);
 
@@ -345,6 +361,22 @@ namespace HospitalAPI.Services
 
             await _appointmentRepository.UpdateAsync(appointment);
             await _appointmentRepository.SaveChangesAsync();
+
+            appointment = await _appointmentRepository.GetByIdAsync(appointment.Id);
+
+            if (appointment == null)
+            {
+                throw new BusinessException("Appointment not found.");
+            }
+
+
+            await _emailService.SendEmailAsync(
+                appointment.Patient!.User!.Email,
+                "Appointment Approved",
+                EmailTemplateService.AppointmentApproved(
+                    appointment.Patient.FullName,
+                    appointment.Doctor!.FullName,
+                    appointment.AppointmentDate));
         }
 
 
@@ -379,6 +411,24 @@ namespace HospitalAPI.Services
 
             await _appointmentRepository.UpdateAsync(appointment);
             await _appointmentRepository.SaveChangesAsync();
+
+            appointment = await _appointmentRepository.GetByIdAsync(appointment.Id);
+
+            if (appointment == null ||
+                appointment.Patient == null ||
+                appointment.Patient.User == null ||
+                appointment.Doctor == null)
+            {
+                throw new BusinessException("Appointment data is incomplete.");
+            }
+
+            await _emailService.SendEmailAsync(
+                appointment.Patient.User.Email,
+                "Appointment Completed",
+                EmailTemplateService.AppointmentCompleted(
+                    appointment.Patient.FullName,
+                    appointment.Doctor.FullName,
+                    appointment.AppointmentDate));
         }
 
 
@@ -419,6 +469,24 @@ namespace HospitalAPI.Services
 
             await _appointmentRepository.UpdateAsync(appointment);
             await _appointmentRepository.SaveChangesAsync();
+
+            appointment = await _appointmentRepository.GetByIdAsync(appointment.Id);
+
+            if (appointment == null ||
+                appointment.Patient == null ||
+                appointment.Patient.User == null ||
+                appointment.Doctor == null)
+            {
+                throw new BusinessException("Appointment data is incomplete.");
+            }
+
+            await _emailService.SendEmailAsync(
+                appointment.Patient.User.Email,
+                "Appointment Cancelled",
+                EmailTemplateService.AppointmentCancelled(
+                    appointment.Patient.FullName,
+                    appointment.Doctor.FullName,
+                    appointment.AppointmentDate));
         }
 
 
