@@ -30,6 +30,17 @@ namespace HospitalAPI
             builder.Services.AddControllers();
 
 
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAngular", policy =>
+                {
+                    policy.WithOrigins("http://localhost:4200")
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                });
+            });
+
+
             builder.Services.Configure<JwtSettings>(
             builder.Configuration.GetSection("Jwt"));
 
@@ -173,6 +184,8 @@ namespace HospitalAPI
             app.UseMiddleware<ExceptionMiddleware>();
 
             app.UseHttpsRedirection();
+
+            app.UseCors("AllowAngular");
 
             app.UseAuthentication();
 
