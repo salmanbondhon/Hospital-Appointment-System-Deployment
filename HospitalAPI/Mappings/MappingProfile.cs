@@ -21,7 +21,7 @@ namespace HospitalAPI.Mappings
             CreateMap<CreateDoctorDto, Doctor>();
 
             CreateMap<UpdateDoctorDto, Doctor>();
-
+            CreateMap<Doctor, DoctorDto>();
 
 
             // Patient

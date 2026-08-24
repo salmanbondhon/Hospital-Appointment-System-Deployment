@@ -7,5 +7,8 @@ namespace HospitalAPI.Interfaces
         Task RegisterAsync(RegisterDto dto);
 
         Task<LoginResponseDto> LoginAsync(LoginDto dto);
+
+        Task<IEnumerable<UserDto>> GetAvailableDoctorUsersAsync();
+        Task<IEnumerable<UserDto>> GetAvailablePatientUsersAsync();
     }
 }

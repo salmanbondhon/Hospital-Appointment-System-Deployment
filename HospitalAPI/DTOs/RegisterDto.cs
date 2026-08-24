@@ -1,5 +1,4 @@
-﻿using HospitalAPI.Enums;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace HospitalAPI.DTOs
 {
@@ -17,7 +16,21 @@ namespace HospitalAPI.DTOs
         [MinLength(6)]
         public string Password { get; set; } = string.Empty;
 
+        // Patient information
         [Required]
-        public UserRole Role { get; set; }
+        [Range(1, 120)]
+        public int Age { get; set; }
+
+        [Required]
+        public string Gender { get; set; } = string.Empty;
+
+        [Required]
+        public string PhoneNumber { get; set; } = string.Empty;
+
+        [Required]
+        public string Address { get; set; } = string.Empty;
+
+        [Required]
+        public string BloodGroup { get; set; } = string.Empty;
     }
 }

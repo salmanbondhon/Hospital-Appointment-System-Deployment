@@ -177,8 +177,7 @@ namespace HospitalAPI.Services
 
             appointment.Status = AppointmentStatus.Pending;
 
-            // IMPORTANT: Link the appointment to the logged-in patient
-            appointment.PatientId = patient.Id;
+           
 
             await _appointmentRepository.AddAsync(appointment);
             await _appointmentRepository.SaveChangesAsync();
