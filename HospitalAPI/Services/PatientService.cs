@@ -14,89 +14,346 @@ namespace HospitalAPI.Services
         private readonly IMapper _mapper;
 
         public PatientService(
-      IPatientRepository repository,
-      IUserRepository userRepository,
-      IMapper mapper)
+            IPatientRepository repository,
+            IUserRepository userRepository,
+            IMapper mapper)
         {
             _repository = repository;
             _userRepository = userRepository;
             _mapper = mapper;
         }
 
+
+        // =================================================
+        // GET ALL
+        // =================================================
+
         public async Task<IEnumerable<PatientDto>> GetAllAsync()
         {
-            var patients = await _repository.GetAllAsync();
+            var patients =
+                await _repository.GetAllAsync();
 
-            return _mapper.Map<IEnumerable<PatientDto>>(patients);
+            return _mapper.Map<IEnumerable<PatientDto>>(
+                patients);
         }
+
+
+        // =================================================
+        // GET BY ID
+        // =================================================
 
         public async Task<PatientDto?> GetByIdAsync(int id)
         {
-            var patient = await _repository.GetByIdAsync(id);
+            var patient =
+                await _repository.GetByIdAsync(id);
 
             if (patient == null)
+            {
                 return null;
+            }
 
             return _mapper.Map<PatientDto>(patient);
         }
 
-        public async Task<PatientDto> AddAsync(CreatePatientDto dto)
+
+        // =================================================
+        // CREATE PATIENT
+        // =================================================
+
+        public async Task<PatientDto> AddAsync(
+            CreatePatientDto dto,
+            int currentUserId,
+            string currentUserRole)
         {
-            // Check if user exists
-            var user = await _userRepository.GetByIdAsync(dto.UserId);
+            // =================================================
+            // PATIENT CREATES OWN PROFILE
+            // =================================================
+
+            if (currentUserRole == UserRole.Patient.ToString())
+            {
+                var user =
+                    await _userRepository.GetByIdAsync(
+                        currentUserId);
+
+                if (user == null)
+                {
+                    throw new BusinessException(
+                        "Patient user account not found.");
+                }
+
+
+                var existingPatient =
+                    await _repository.GetByUserIdAsync(
+                        currentUserId);
+
+                if (existingPatient != null)
+                {
+                    throw new BusinessException(
+                        "Patient profile already exists.");
+                }
+
+
+                var patient = new Patient
+                {
+                    UserId = user.Id,
+
+                    FullName = dto.FullName,
+
+                    Age = dto.Age,
+
+                    Gender = dto.Gender,
+
+                    PhoneNumber = dto.PhoneNumber,
+
+                    Address = dto.Address,
+
+                    BloodGroup = dto.BloodGroup
+                };
+
+
+                await _repository.AddAsync(patient);
+
+                await _repository.SaveChangesAsync();
+
+
+                return _mapper.Map<PatientDto>(
+                    patient);
+            }
+
+
+            // =================================================
+            // ADMIN CREATES PATIENT
+            // =================================================
+
+            if (currentUserRole == UserRole.Admin.ToString())
+            {
+                // Check email
+                var existingUser =
+                    await _userRepository.GetByEmailAsync(
+                        dto.Email);
+
+                if (existingUser != null)
+                {
+                    throw new BusinessException(
+                        "Email already exists.");
+                }
+
+
+                // Validate password
+                if (string.IsNullOrWhiteSpace(dto.Password))
+                {
+                    throw new BusinessException(
+                        "Password is required.");
+                }
+
+
+                // =================================================
+                // CREATE USER
+                // =================================================
+
+                var user = new User
+                {
+                    FullName = dto.FullName,
+
+                    Email = dto.Email,
+
+                    PasswordHash =
+                        BCrypt.Net.BCrypt.HashPassword(
+                            dto.Password),
+
+                    Role = UserRole.Patient
+                };
+
+
+                await _userRepository.AddAsync(user);
+
+                await _userRepository.SaveChangesAsync();
+
+
+                // =================================================
+                // CREATE PATIENT PROFILE
+                // =================================================
+
+                var patient = new Patient
+                {
+                    UserId = user.Id,
+
+                    FullName = dto.FullName,
+
+                    Age = dto.Age,
+
+                    Gender = dto.Gender,
+
+                    PhoneNumber = dto.PhoneNumber,
+
+                    Address = dto.Address,
+
+                    BloodGroup = dto.BloodGroup
+                };
+
+
+                await _repository.AddAsync(patient);
+
+                await _repository.SaveChangesAsync();
+
+
+                return _mapper.Map<PatientDto>(
+                    patient);
+            }
+
+
+            throw new BusinessException(
+                "You are not authorized to create a patient.");
+        }
+
+
+        // =================================================
+        // UPDATE PATIENT
+        // =================================================
+
+        public async Task UpdateAsync(
+            int id,
+            UpdatePatientDto dto,
+            int currentUserId,
+            string currentUserRole)
+        {
+            var patient =
+                await _repository.GetByIdAsync(id);
+
+            if (patient == null)
+            {
+                throw new BusinessException(
+                    "Patient not found.");
+            }
+
+
+            // =================================================
+            // PATIENT CAN ONLY UPDATE OWN PROFILE
+            // =================================================
+
+            if (currentUserRole ==
+                UserRole.Patient.ToString())
+            {
+                if (patient.UserId != currentUserId)
+                {
+                    throw new BusinessException(
+                        "You can only update your own profile.");
+                }
+            }
+
+
+            // =================================================
+            // UPDATE PATIENT PROFILE
+            // =================================================
+
+            patient.FullName =
+                dto.FullName;
+
+            patient.Age =
+                dto.Age;
+
+            patient.Gender =
+                dto.Gender;
+
+            patient.PhoneNumber =
+                dto.PhoneNumber;
+
+            patient.Address =
+                dto.Address;
+
+            patient.BloodGroup =
+                dto.BloodGroup;
+
+
+            // =================================================
+            // GET USER ACCOUNT
+            // =================================================
+
+            var user =
+                await _userRepository.GetByIdAsync(
+                    patient.UserId);
 
             if (user == null)
             {
-                throw new BusinessException("User not found.");
+                throw new BusinessException(
+                    "Patient user account not found.");
             }
 
-            // User must have Patient role
-            if (user.Role != UserRole.Patient)
+
+            // =================================================
+            // UPDATE USER NAME
+            // =================================================
+
+            user.FullName =
+                dto.FullName;
+
+
+            // =================================================
+            // UPDATE EMAIL
+            // =================================================
+
+            if (!string.IsNullOrWhiteSpace(dto.Email))
             {
-                throw new BusinessException("Selected user is not a patient.");
+                var existingUser =
+                    await _userRepository.GetByEmailAsync(
+                        dto.Email);
+
+                if (existingUser != null &&
+                    existingUser.Id != user.Id)
+                {
+                    throw new BusinessException(
+                        "Email already exists.");
+                }
+
+                user.Email =
+                    dto.Email;
             }
 
-            // Prevent duplicate patient profile
-            var existingPatient = await _repository.GetByUserIdAsync(dto.UserId);
 
-            if (existingPatient != null)
+            // =================================================
+            // UPDATE PASSWORD
+            // =================================================
+
+            if (!string.IsNullOrWhiteSpace(dto.Password))
             {
-                throw new BusinessException("This user already has a patient profile.");
+                user.PasswordHash =
+                    BCrypt.Net.BCrypt.HashPassword(
+                        dto.Password);
             }
 
-            var patient = _mapper.Map<Patient>(dto);
 
-            await _repository.AddAsync(patient);
+            // =================================================
+            // SAVE
+            // =================================================
+
+            await _repository.UpdateAsync(
+                patient);
+
             await _repository.SaveChangesAsync();
 
-            return _mapper.Map<PatientDto>(patient);
+            await _userRepository.SaveChangesAsync();
         }
 
-        public async Task UpdateAsync(int id, UpdatePatientDto dto)
-        {
-            var patient = await _repository.GetByIdAsync(id);
 
-            if (patient == null)
-            {
-                throw new BusinessException("Patient not found.");
-            }
-
-            _mapper.Map(dto, patient);
-
-            await _repository.UpdateAsync(patient);
-            await _repository.SaveChangesAsync();
-        }
+        // =================================================
+        // DELETE
+        // =================================================
 
         public async Task DeleteAsync(int id)
         {
-            var patient = await _repository.GetByIdAsync(id);
+            var patient =
+                await _repository.GetByIdAsync(id);
 
             if (patient == null)
             {
-                throw new BusinessException("Patient not found.");
+                throw new BusinessException(
+                    "Patient not found.");
             }
 
-            await _repository.DeleteAsync(patient);
+
+            await _repository.DeleteAsync(
+                patient);
+
             await _repository.SaveChangesAsync();
         }
     }

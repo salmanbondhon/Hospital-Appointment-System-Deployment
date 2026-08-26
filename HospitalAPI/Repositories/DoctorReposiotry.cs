@@ -9,49 +9,106 @@ namespace HospitalAPI.Repositories
     {
         private readonly ApplicationDbContext _context;
 
-        public DoctorRepository(ApplicationDbContext context)
+        public DoctorRepository(
+            ApplicationDbContext context)
         {
             _context = context;
         }
 
-       
+
+        // =====================================================
+        // GET ALL
+        // =====================================================
+
         public async Task<IEnumerable<Doctor>> GetAllAsync()
         {
             return await _context.Doctors
+
                 .Include(d => d.Department)
+
+                .Include(d => d.User)
+
                 .ToListAsync();
         }
+
+
+        // =====================================================
+        // GET BY ID
+        // =====================================================
 
         public async Task<Doctor?> GetByIdAsync(int id)
         {
             return await _context.Doctors
+
                 .Include(d => d.Department)
-                .FirstOrDefaultAsync(d => d.Id == id);
+
+                .Include(d => d.User)
+
+                .FirstOrDefaultAsync(
+                    d => d.Id == id);
         }
 
-        public async Task<Doctor?> GetByUserIdAsync(int userId)
+
+        // =====================================================
+        // GET BY USER ID
+        // =====================================================
+
+        public async Task<Doctor?> GetByUserIdAsync(
+            int userId)
         {
             return await _context.Doctors
+
                 .Include(d => d.Department)
-                .FirstOrDefaultAsync(d => d.UserId == userId);
+
+                .Include(d => d.User)
+
+                .FirstOrDefaultAsync(
+                    d => d.UserId == userId);
         }
 
-        public async Task AddAsync(Doctor doctor)
+
+        // =====================================================
+        // ADD
+        // =====================================================
+
+        public async Task AddAsync(
+            Doctor doctor)
         {
-            await _context.Doctors.AddAsync(doctor);
+            await _context.Doctors
+                .AddAsync(doctor);
         }
 
-        public Task UpdateAsync(Doctor doctor)
+
+        // =====================================================
+        // UPDATE
+        // =====================================================
+
+        public Task UpdateAsync(
+            Doctor doctor)
         {
-            _context.Doctors.Update(doctor);
+            // Entity is already tracked
+            // by Entity Framework Core.
+
             return Task.CompletedTask;
         }
 
-        public Task DeleteAsync(Doctor doctor)
+
+        // =====================================================
+        // DELETE
+        // =====================================================
+
+        public Task DeleteAsync(
+            Doctor doctor)
         {
             _context.Doctors.Remove(doctor);
+
             return Task.CompletedTask;
         }
+
+
+        // =====================================================
+        // SAVE
+        // =====================================================
 
         public async Task SaveChangesAsync()
         {

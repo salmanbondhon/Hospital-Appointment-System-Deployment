@@ -8,67 +8,137 @@ namespace HospitalAPI.Mappings
     {
         public MappingProfile()
         {
-            // Department
+            // =================================================
+            // DEPARTMENT
+            // =================================================
+
             CreateMap<Department, DepartmentDto>();
+
             CreateMap<CreateDepartmentDto, Department>();
+
             CreateMap<UpdateDepartmentDto, Department>();
 
-            // Doctor
+
+            // =================================================
+            // DOCTOR
+            // =================================================
+
             CreateMap<Doctor, DoctorDto>()
-                .ForMember(dest => dest.DepartmentName,
-                    opt => opt.MapFrom(src => src.Department!.Name));
+
+                .ForMember(
+                    dest => dest.Email,
+                    opt => opt.MapFrom(
+                        src => src.User != null
+                            ? src.User.Email
+                            : string.Empty))
+
+                .ForMember(
+                    dest => dest.DepartmentName,
+                    opt => opt.MapFrom(
+                        src => src.Department != null
+                            ? src.Department.Name
+                            : string.Empty));
+
 
             CreateMap<CreateDoctorDto, Doctor>();
 
-            CreateMap<UpdateDoctorDto, Doctor>();
-            CreateMap<Doctor, DoctorDto>();
+            // =================================================
+            // PATIENT
+            // =================================================
 
+            CreateMap<Patient, PatientDto>()
 
-            // Patient
-            CreateMap<Patient, PatientDto>();
+                .ForMember(
+                    dest => dest.Email,
+                    opt => opt.MapFrom(
+                        src => src.User != null
+                            ? src.User.Email
+                            : string.Empty));
+
 
             CreateMap<CreatePatientDto, Patient>();
+
 
             CreateMap<UpdatePatientDto, Patient>();
 
 
-            // Appointment
+            // =================================================
+            // APPOINTMENT
+            // =================================================
+
             CreateMap<Appointment, AppointmentDto>()
-                .ForMember(dest => dest.DoctorName,
-                    opt => opt.MapFrom(src => src.Doctor != null ? src.Doctor.FullName : string.Empty))
-                .ForMember(dest => dest.PatientName,
-                    opt => opt.MapFrom(src => src.Patient != null ? src.Patient.FullName : string.Empty));
 
+                .ForMember(
+                    dest => dest.DoctorName,
+                    opt => opt.MapFrom(
+                        src => src.Doctor != null
+                            ? src.Doctor.FullName
+                            : string.Empty))
 
-            // Prescription
-            CreateMap<CreatePrescriptionDto, Prescription>();
-
-            CreateMap<Prescription, PrescriptionDto>()
-                .ForMember(dest => dest.DoctorName,
-                    opt => opt.MapFrom(src => src.Appointment!.Doctor!.FullName))
-                .ForMember(dest => dest.PatientName,
-                    opt => opt.MapFrom(src => src.Appointment!.Patient!.FullName));
-
-
-            //Payment
-            CreateMap<CreatePaymentDto, Payment>();
-
-            CreateMap<UpdatePaymentDto, Payment>();
-
-            CreateMap<Payment, PaymentDto>()
-                .ForMember(dest => dest.PatientName,
-                    opt => opt.MapFrom(src => src.Appointment!.Patient!.FullName))
-                .ForMember(dest => dest.DoctorName,
-                    opt => opt.MapFrom(src => src.Appointment!.Doctor!.FullName));
+                .ForMember(
+                    dest => dest.PatientName,
+                    opt => opt.MapFrom(
+                        src => src.Patient != null
+                            ? src.Patient.FullName
+                            : string.Empty));
 
 
             CreateMap<CreateAppointmentDto, Appointment>();
 
             CreateMap<UpdateAppointmentDto, Appointment>();
 
+
+            // =================================================
+            // PRESCRIPTION
+            // =================================================
+
+            CreateMap<CreatePrescriptionDto, Prescription>();
+
+            CreateMap<Prescription, PrescriptionDto>()
+
+                .ForMember(
+                    dest => dest.DoctorName,
+                    opt => opt.MapFrom(
+                        src => src.Appointment!.Doctor!.FullName))
+
+                .ForMember(
+                    dest => dest.PatientName,
+                    opt => opt.MapFrom(
+                        src => src.Appointment!.Patient!.FullName));
+
+
+            // =================================================
+            // PAYMENT
+            // =================================================
+
+            CreateMap<CreatePaymentDto, Payment>();
+
+            CreateMap<UpdatePaymentDto, Payment>();
+
+            CreateMap<Payment, PaymentDto>()
+
+                .ForMember(
+                    dest => dest.PatientName,
+                    opt => opt.MapFrom(
+                        src => src.Appointment!.Patient!.FullName))
+
+                .ForMember(
+                    dest => dest.DoctorName,
+                    opt => opt.MapFrom(
+                        src => src.Appointment!.Doctor!.FullName));
+
+
+            // =================================================
+            // DOCTOR LEAVE
+            // =================================================
+
             CreateMap<DoctorLeave, DoctorLeaveDto>()
-    .ForMember(dest => dest.DoctorName,
-        opt => opt.MapFrom(src => src.Doctor.FullName));
+
+                .ForMember(
+                    dest => dest.DoctorName,
+                    opt => opt.MapFrom(
+                        src => src.Doctor.FullName));
+
 
             CreateMap<CreateLeaveDto, DoctorLeave>();
         }

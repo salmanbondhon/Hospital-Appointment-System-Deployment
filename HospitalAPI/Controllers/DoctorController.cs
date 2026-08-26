@@ -1,10 +1,8 @@
 ﻿using HospitalAPI.DTOs;
 using HospitalAPI.Interfaces;
 using HospitalAPI.Responses;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-
-
+using Microsoft.AspNetCore.Mvc;
 
 namespace HospitalAPI.Controllers
 {
@@ -15,37 +13,58 @@ namespace HospitalAPI.Controllers
     {
         private readonly IDoctorService _service;
 
-        public DoctorController(IDoctorService service)
+        public DoctorController(
+            IDoctorService service)
         {
             _service = service;
         }
 
-        // GET: api/Doctor
+
+        // =====================================================
+        // GET ALL
+        // =====================================================
+
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var doctors = await _service.GetAllAsync();
+            var doctors =
+                await _service.GetAllAsync();
+
             return Ok(doctors);
         }
 
-        // GET: api/Doctor/5
+
+        // =====================================================
+        // GET BY ID
+        // =====================================================
+
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetById(
+            int id)
         {
-            var doctor = await _service.GetByIdAsync(id);
+            var doctor =
+                await _service.GetByIdAsync(id);
 
             if (doctor == null)
+            {
                 return NotFound();
+            }
 
             return Ok(doctor);
         }
 
-        // POST: api/Doctor
+
+        // =====================================================
+        // CREATE
+        // =====================================================
+
         [Authorize(Roles = "Admin")]
         [HttpPost]
-        public async Task<IActionResult> Create(CreateDoctorDto dto)
+        public async Task<IActionResult> Create(
+            CreateDoctorDto dto)
         {
-            var doctor = await _service.AddAsync(dto);
+            var doctor =
+                await _service.AddAsync(dto);
 
             return CreatedAtAction(
                 nameof(GetById),
@@ -53,34 +72,55 @@ namespace HospitalAPI.Controllers
                 doctor);
         }
 
-        // PUT: api/Doctor/5
+
+        // =====================================================
+        // UPDATE
+        // =====================================================
+
         [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, UpdateDoctorDto dto)
+        public async Task<IActionResult> Update(
+            int id,
+            UpdateDoctorDto dto)
         {
-            await _service.UpdateAsync(id, dto);
+            await _service.UpdateAsync(
+                id,
+                dto);
 
-            return Ok(new ApiResponse<object>
-            {
-                Success = true,
-                Message = "Doctor updated successfully.",
-                Data = null
-            });
+            return Ok(
+                new ApiResponse<object>
+                {
+                    Success = true,
+
+                    Message =
+                        "Doctor updated successfully.",
+
+                    Data = null
+                });
         }
 
-        // DELETE: api/Doctor/5
+
+        // =====================================================
+        // DELETE
+        // =====================================================
+
         [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(
+            int id)
         {
             await _service.DeleteAsync(id);
 
-            return Ok(new ApiResponse<object>
-            {
-                Success = true,
-                Message = "Doctor deleted successfully.",
-                Data = null
-            });
+            return Ok(
+                new ApiResponse<object>
+                {
+                    Success = true,
+
+                    Message =
+                        "Doctor deleted successfully.",
+
+                    Data = null
+                });
         }
     }
 }

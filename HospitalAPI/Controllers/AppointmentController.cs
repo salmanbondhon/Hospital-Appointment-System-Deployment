@@ -1,8 +1,8 @@
 ﻿using HospitalAPI.DTOs;
 using HospitalAPI.Interfaces;
 using HospitalAPI.Responses;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
 namespace HospitalAPI.Controllers
@@ -14,163 +14,283 @@ namespace HospitalAPI.Controllers
     {
         private readonly IAppointmentService _service;
 
-        public AppointmentController(IAppointmentService service)
+        public AppointmentController(
+            IAppointmentService service)
         {
             _service = service;
         }
 
-        // GET: api/Appointment
+
+        // =====================================================
+        // GET ALL
+        // =====================================================
+
         [Authorize(Roles = "Admin,Doctor,Patient")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
             int userId = int.Parse(
-                User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+                User.FindFirst(
+                    ClaimTypes.NameIdentifier)!.Value);
 
-            string role = User.FindFirst(ClaimTypes.Role)!.Value;
+            string role =
+                User.FindFirst(
+                    ClaimTypes.Role)!.Value;
 
-            var appointments = await _service.GetAllAsync(userId, role);
+            var appointments =
+                await _service.GetAllAsync(
+                    userId,
+                    role);
 
             return Ok(appointments);
         }
 
-        // GET: api/Appointment/5
+
+        // =====================================================
+        // GET BY ID
+        // =====================================================
+
         [Authorize(Roles = "Admin,Doctor,Patient")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
             int userId = int.Parse(
-                User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+                User.FindFirst(
+                    ClaimTypes.NameIdentifier)!.Value);
 
-            string role = User.FindFirst(ClaimTypes.Role)!.Value;
+            string role =
+                User.FindFirst(
+                    ClaimTypes.Role)!.Value;
 
-            var appointment = await _service.GetByIdAsync(id, userId, role);
+            var appointment =
+                await _service.GetByIdAsync(
+                    id,
+                    userId,
+                    role);
 
             if (appointment == null)
+            {
                 return NotFound();
+            }
 
             return Ok(appointment);
         }
 
-        // POST: api/Appointment
+
+        // =====================================================
+        // CREATE
+        // =====================================================
+
+        // Patient -> creates appointment for himself
+        // Admin   -> creates appointment for selected patient
+        // Doctor  -> cannot create appointment
+
         [Authorize(Roles = "Admin,Patient")]
         [HttpPost]
-        public async Task<IActionResult> Create(CreateAppointmentDto dto)
+        public async Task<IActionResult> Create(
+            CreateAppointmentDto dto)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            var userIdClaim =
+                User.FindFirst(
+                    ClaimTypes.NameIdentifier);
 
             if (userIdClaim == null)
             {
                 return Unauthorized();
             }
 
-            int userId = int.Parse(userIdClaim.Value);
+            int userId =
+                int.Parse(userIdClaim.Value);
 
-            var appointment = await _service.AddAsync(dto, userId);
+            string role =
+                User.FindFirst(
+                    ClaimTypes.Role)!.Value;
 
-            return Ok(new ApiResponse<AppointmentDto>
-            {
-                Success = true,
-                Message = "Appointment created successfully.",
-                Data = appointment
-            });
+            var appointment =
+                await _service.AddAsync(
+                    dto,
+                    userId,
+                    role);
+
+            return Ok(
+                new ApiResponse<AppointmentDto>
+                {
+                    Success = true,
+                    Message =
+                        "Appointment created successfully.",
+                    Data = appointment
+                });
         }
 
-        // PUT: api/Appointment/5
+
+        // =====================================================
+        // UPDATE
+        // =====================================================
+
         [Authorize(Roles = "Admin,Doctor")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, UpdateAppointmentDto dto)
+        public async Task<IActionResult> Update(
+            int id,
+            UpdateAppointmentDto dto)
         {
             int userId = int.Parse(
-                User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+                User.FindFirst(
+                    ClaimTypes.NameIdentifier)!.Value);
 
-            string role = User.FindFirst(ClaimTypes.Role)!.Value;
+            string role =
+                User.FindFirst(
+                    ClaimTypes.Role)!.Value;
 
-            await _service.UpdateAsync(id, dto, userId, role);
+            await _service.UpdateAsync(
+                id,
+                dto,
+                userId,
+                role);
 
-            return Ok(new ApiResponse<object>
-            {
-                Success = true,
-                Message = "Appointment updated successfully.",
-                Data = null
-            });
+            return Ok(
+                new ApiResponse<object>
+                {
+                    Success = true,
+                    Message =
+                        "Appointment updated successfully.",
+                    Data = null
+                });
         }
 
-        // DELETE: api/Appointment/5
+
+        // =====================================================
+        // DELETE
+        // =====================================================
+
         [Authorize(Roles = "Admin,Doctor")]
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(
+            int id)
         {
             int userId = int.Parse(
-                User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+                User.FindFirst(
+                    ClaimTypes.NameIdentifier)!.Value);
 
-            string role = User.FindFirst(ClaimTypes.Role)!.Value;
+            string role =
+                User.FindFirst(
+                    ClaimTypes.Role)!.Value;
 
-            await _service.DeleteAsync(id, userId, role);
+            await _service.DeleteAsync(
+                id,
+                userId,
+                role);
 
-            return Ok(new ApiResponse<object>
-            {
-                Success = true,
-                Message = "Appointment deleted successfully.",
-                Data = null
-            });
+            return Ok(
+                new ApiResponse<object>
+                {
+                    Success = true,
+                    Message =
+                        "Appointment deleted successfully.",
+                    Data = null
+                });
         }
+
+
+        // =====================================================
+        // APPROVE
+        // =====================================================
 
         [Authorize(Roles = "Admin,Doctor")]
         [HttpPut("{id}/approve")]
-        public async Task<IActionResult> ApproveAppointment(int id)
+        public async Task<IActionResult>
+            ApproveAppointment(int id)
         {
             int userId = int.Parse(
-                User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+                User.FindFirst(
+                    ClaimTypes.NameIdentifier)!.Value);
 
-            string role = User.FindFirst(ClaimTypes.Role)!.Value;
+            string role =
+                User.FindFirst(
+                    ClaimTypes.Role)!.Value;
 
-            await _service.ApproveAppointmentAsync(id, userId, role);
+            await _service.ApproveAppointmentAsync(
+                id,
+                userId,
+                role);
 
-            return Ok(new ApiResponse<object>
-            {
-                Success = true,
-                Message = "Appointment approved successfully.",
-                Data = null
-            });
+            return Ok(
+                new ApiResponse<object>
+                {
+                    Success = true,
+                    Message =
+                        "Appointment approved successfully.",
+                    Data = null
+                });
         }
 
+
+        // =====================================================
+        // COMPLETE
+        // =====================================================
 
         [Authorize(Roles = "Admin,Doctor")]
         [HttpPut("{id}/complete")]
-        public async Task<IActionResult> CompleteAppointment(int id)
+        public async Task<IActionResult>
+            CompleteAppointment(int id)
         {
-            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            string role = User.FindFirst(ClaimTypes.Role)!.Value;
+            int userId = int.Parse(
+                User.FindFirst(
+                    ClaimTypes.NameIdentifier)!.Value);
 
-            await _service.CompleteAppointmentAsync(id, userId, role);
+            string role =
+                User.FindFirst(
+                    ClaimTypes.Role)!.Value;
 
-            return Ok(new ApiResponse<object>
-            {
-                Success = true,
-                Message = "Appointment completed successfully.",
-                Data = null
-            });
+            await _service.CompleteAppointmentAsync(
+                id,
+                userId,
+                role);
+
+            return Ok(
+                new ApiResponse<object>
+                {
+                    Success = true,
+                    Message =
+                        "Appointment completed successfully.",
+                    Data = null
+                });
         }
 
 
-        [Authorize(Roles = "Admin,Doctor")]
+        // =====================================================
+        // CANCEL
+        // =====================================================
+
+        // Patient can cancel own appointment
+        // Doctor can cancel own appointment
+        // Admin can cancel any appointment
+
+        [Authorize(Roles = "Admin,Doctor,Patient")]
         [HttpPut("{id}/cancel")]
-        public async Task<IActionResult> CancelAppointment(int id)
+        public async Task<IActionResult>
+            CancelAppointment(int id)
         {
             int userId = int.Parse(
-                User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+                User.FindFirst(
+                    ClaimTypes.NameIdentifier)!.Value);
 
-            string role = User.FindFirst(ClaimTypes.Role)!.Value;
+            string role =
+                User.FindFirst(
+                    ClaimTypes.Role)!.Value;
 
-            await _service.CancelAppointmentAsync(id, userId, role);
+            await _service.CancelAppointmentAsync(
+                id,
+                userId,
+                role);
 
-            return Ok(new ApiResponse<object>
-            {
-                Success = true,
-                Message = "Appointment cancelled successfully.",
-                Data = null
-            });
+            return Ok(
+                new ApiResponse<object>
+                {
+                    Success = true,
+                    Message =
+                        "Appointment cancelled successfully.",
+                    Data = null
+                });
         }
     }
 }

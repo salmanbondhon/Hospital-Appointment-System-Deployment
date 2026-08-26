@@ -4,7 +4,6 @@ using HospitalAPI.Enums;
 using HospitalAPI.Exceptions;
 using HospitalAPI.Interfaces;
 using HospitalAPI.Models;
-using System.Numerics;
 
 namespace HospitalAPI.Services
 {
@@ -18,120 +17,235 @@ namespace HospitalAPI.Services
         private readonly IMapper _mapper;
 
 
-
         public AppointmentService(
-     IAppointmentRepository appointmentRepository,
-     IDoctorRepository doctorRepository,
-     IPatientRepository patientRepository,
-     IDoctorLeaveRepository doctorLeaveRepository,
-     IMapper mapper,
-     IEmailService emailService)
+            IAppointmentRepository appointmentRepository,
+            IDoctorRepository doctorRepository,
+            IPatientRepository patientRepository,
+            IDoctorLeaveRepository doctorLeaveRepository,
+            IMapper mapper,
+            IEmailService emailService)
         {
-            _appointmentRepository = appointmentRepository;
-            _doctorRepository = doctorRepository;
-            _patientRepository = patientRepository;
-            _doctorLeaveRepository = doctorLeaveRepository;
+            _appointmentRepository =
+                appointmentRepository;
+
+            _doctorRepository =
+                doctorRepository;
+
+            _patientRepository =
+                patientRepository;
+
+            _doctorLeaveRepository =
+                doctorLeaveRepository;
+
             _mapper = mapper;
-            _emailService = emailService;
+
+            _emailService =
+                emailService;
         }
-        public async Task<IEnumerable<AppointmentDto>> GetAllAsync(int userId, string role)
+
+
+        // =====================================================
+        // GET ALL
+        // =====================================================
+
+        public async Task<IEnumerable<AppointmentDto>>
+            GetAllAsync(
+                int userId,
+                string role)
         {
-            // Admin -> All appointments
+            // ADMIN
             if (role == "Admin")
             {
-                var appointments = await _appointmentRepository.GetAllAsync();
-                return _mapper.Map<IEnumerable<AppointmentDto>>(appointments);
+                var appointments =
+                    await _appointmentRepository
+                        .GetAllAsync();
+
+                return _mapper.Map<
+                    IEnumerable<AppointmentDto>>(
+                        appointments);
             }
 
-            // Doctor -> Only their appointments
+
+            // DOCTOR
             if (role == "Doctor")
             {
-                var doctor = await _doctorRepository.GetByUserIdAsync(userId);
+                var doctor =
+                    await _doctorRepository
+                        .GetByUserIdAsync(userId);
 
                 if (doctor == null)
-                    throw new BusinessException("Doctor profile not found.");
+                {
+                    throw new BusinessException(
+                        "Doctor profile not found.");
+                }
 
-                var appointments = await _appointmentRepository
-                    .GetByDoctorIdAsync(doctor.Id);
+                var appointments =
+                    await _appointmentRepository
+                        .GetByDoctorIdAsync(
+                            doctor.Id);
 
-                return _mapper.Map<IEnumerable<AppointmentDto>>(appointments);
+                return _mapper.Map<
+                    IEnumerable<AppointmentDto>>(
+                        appointments);
             }
 
-            // Patient -> Only their appointments
-            var patient = await _patientRepository.GetByUserIdAsync(userId);
+
+            // PATIENT
+            var patient =
+                await _patientRepository
+                    .GetByUserIdAsync(userId);
 
             if (patient == null)
-                throw new BusinessException("Patient profile not found.");
+            {
+                throw new BusinessException(
+                    "Patient profile not found.");
+            }
 
-            var patientAppointments = await _appointmentRepository
-                .GetByPatientIdAsync(patient.Id);
+            var patientAppointments =
+                await _appointmentRepository
+                    .GetByPatientIdAsync(
+                        patient.Id);
 
-            return _mapper.Map<IEnumerable<AppointmentDto>>(patientAppointments);
+            return _mapper.Map<
+                IEnumerable<AppointmentDto>>(
+                    patientAppointments);
         }
-        public async Task<AppointmentDto?> GetByIdAsync(int id, int userId, string role)
+
+
+        // =====================================================
+        // GET BY ID
+        // =====================================================
+
+        public async Task<AppointmentDto?>
+            GetByIdAsync(
+                int id,
+                int userId,
+                string role)
         {
-            var appointment = await _appointmentRepository.GetByIdAsync(id);
+            var appointment =
+                await _appointmentRepository
+                    .GetByIdAsync(id);
 
             if (appointment == null)
+            {
                 return null;
+            }
 
-            // Admin can access everything
+
+            // ADMIN
             if (role == "Admin")
             {
-                return _mapper.Map<AppointmentDto>(appointment);
+                return _mapper.Map<
+                    AppointmentDto>(
+                        appointment);
             }
 
-            // Doctor can access only their appointments
+
+            // DOCTOR
             if (role == "Doctor")
             {
-                var doctor = await _doctorRepository.GetByUserIdAsync(userId);
+                var doctor =
+                    await _doctorRepository
+                        .GetByUserIdAsync(userId);
 
                 if (doctor == null)
-                    throw new BusinessException("Doctor profile not found.");
+                {
+                    throw new BusinessException(
+                        "Doctor profile not found.");
+                }
 
                 if (appointment.DoctorId != doctor.Id)
-                    throw new BusinessException("You are not authorized to view this appointment.");
+                {
+                    throw new BusinessException(
+                        "You are not authorized to view this appointment.");
+                }
 
-                return _mapper.Map<AppointmentDto>(appointment);
+                return _mapper.Map<
+                    AppointmentDto>(
+                        appointment);
             }
 
-            // Patient can access only their appointments
-            var patient = await _patientRepository.GetByUserIdAsync(userId);
+
+            // PATIENT
+            var patient =
+                await _patientRepository
+                    .GetByUserIdAsync(userId);
 
             if (patient == null)
-                throw new BusinessException("Patient profile not found.");
-
-            if (appointment.PatientId != patient.Id)
-                throw new BusinessException("You are not authorized to view this appointment.");
-
-            return _mapper.Map<AppointmentDto>(appointment);
-        }
-
-        public async Task<AppointmentDto> AddAsync(CreateAppointmentDto dto, int userId)
-        {
-            // Prevent past appointments*3e
-            if (dto.AppointmentDate < DateTime.Now)
             {
-                throw new BusinessException("Appointment date cannot be in the past.");
+                throw new BusinessException(
+                    "Patient profile not found.");
             }
 
-            if (!IsValidAppointmentSlot(dto.AppointmentDate))
+            if (appointment.PatientId != patient.Id)
+            {
+                throw new BusinessException(
+                    "You are not authorized to view this appointment.");
+            }
+
+            return _mapper.Map<
+                AppointmentDto>(
+                    appointment);
+        }
+
+
+        // =====================================================
+        // CREATE APPOINTMENT
+        // =====================================================
+
+        public async Task<AppointmentDto>
+            AddAsync(
+                CreateAppointmentDto dto,
+                int userId,
+                string role)
+        {
+            // -------------------------------------------------
+            // DATE VALIDATION
+            // -------------------------------------------------
+
+            if (dto.AppointmentDate < DateTime.Now)
+            {
+                throw new BusinessException(
+                    "Appointment date cannot be in the past.");
+            }
+
+
+            // -------------------------------------------------
+            // 30 MINUTE SLOT
+            // -------------------------------------------------
+
+            if (!IsValidAppointmentSlot(
+                dto.AppointmentDate))
             {
                 throw new BusinessException(
                     "Appointments can only be booked in 30-minute intervals.");
             }
 
-            // Validate Doctor
-            var doctor = await _doctorRepository.GetByIdAsync(dto.DoctorId);
+
+            // -------------------------------------------------
+            // DOCTOR
+            // -------------------------------------------------
+
+            var doctor =
+                await _doctorRepository
+                    .GetByIdAsync(dto.DoctorId);
 
             if (doctor == null)
-                throw new BusinessException("Doctor not found.");
+            {
+                throw new BusinessException(
+                    "Doctor not found.");
+            }
 
 
-            var onLeave = await _doctorLeaveRepository
-    .IsDoctorOnLeaveAsync(
-        doctor.Id,
-        dto.AppointmentDate);
+            // -------------------------------------------------
+            // DOCTOR LEAVE
+            // -------------------------------------------------
+
+            var onLeave =
+                await _doctorLeaveRepository
+                    .IsDoctorOnLeaveAsync(
+                        doctor.Id,
+                        dto.AppointmentDate);
 
             if (onLeave)
             {
@@ -139,11 +253,16 @@ namespace HospitalAPI.Services
                     "Doctor is on approved leave.");
             }
 
-            // Check doctor's working hours
-            bool isWorking = IsDoctorWorking(
-                dto.AppointmentDate,
-                doctor.AvailableFrom,
-                doctor.AvailableTo);
+
+            // -------------------------------------------------
+            // DOCTOR WORKING HOURS
+            // -------------------------------------------------
+
+            bool isWorking =
+                IsDoctorWorking(
+                    dto.AppointmentDate,
+                    doctor.AvailableFrom,
+                    doctor.AvailableTo);
 
             if (!isWorking)
             {
@@ -151,93 +270,183 @@ namespace HospitalAPI.Services
                     $"Doctor is available only between {doctor.AvailableFrom} and {doctor.AvailableTo}");
             }
 
-            // Validate Patient
-            var patient = await _patientRepository.GetByUserIdAsync(userId);
 
-            if (patient == null)
-                throw new BusinessException("Patient not found.");
+            // -------------------------------------------------
+            // PATIENT
+            // -------------------------------------------------
 
-           
+            Patient? patient;
 
-            // Check Doctor Availability
-            var isAvailable = await _appointmentRepository
-                .IsDoctorAvailableAsync(dto.DoctorId, dto.AppointmentDate);
+
+            // ADMIN
+            if (role == "Admin")
+            {
+                if (!dto.PatientId.HasValue)
+                {
+                    throw new BusinessException(
+                        "Please select a patient.");
+                }
+
+                patient =
+                    await _patientRepository
+                        .GetByIdAsync(
+                            dto.PatientId.Value);
+
+                if (patient == null)
+                {
+                    throw new BusinessException(
+                        "Patient not found.");
+                }
+            }
+
+
+            // PATIENT
+            else
+            {
+                patient =
+                    await _patientRepository
+                        .GetByUserIdAsync(userId);
+
+                if (patient == null)
+                {
+                    throw new BusinessException(
+                        "Patient profile not found.");
+                }
+            }
+
+
+            // -------------------------------------------------
+            // DOCTOR AVAILABILITY
+            // -------------------------------------------------
+
+            var isAvailable =
+                await _appointmentRepository
+                    .IsDoctorAvailableAsync(
+                        dto.DoctorId,
+                        dto.AppointmentDate);
 
             if (!isAvailable)
             {
-                throw new BusinessException("Doctor already has an appointment at this time.");
+                throw new BusinessException(
+                    "Doctor already has an appointment at this time.");
             }
 
 
+            // -------------------------------------------------
+            // CREATE
+            // -------------------------------------------------
+
+            var appointment =
+                _mapper.Map<Appointment>(dto);
+
+            appointment.PatientId =
+                patient.Id;
+
+            appointment.Status =
+                AppointmentStatus.Pending;
 
 
-            // Create Appointment
-            var appointment = _mapper.Map<Appointment>(dto);
-            appointment.PatientId = patient.Id;
+            await _appointmentRepository
+                .AddAsync(appointment);
 
-            appointment.Status = AppointmentStatus.Pending;
+            await _appointmentRepository
+                .SaveChangesAsync();
 
-           
 
-            await _appointmentRepository.AddAsync(appointment);
-            await _appointmentRepository.SaveChangesAsync();
+            // -------------------------------------------------
+            // EMAIL
+            // -------------------------------------------------
 
-            // Send confirmation email
-            var body = EmailTemplateService.AppointmentBooked(
-     patient.FullName,
-     doctor.FullName,
-     doctor.Department?.Name,
-     appointment.AppointmentDate,
-     appointment.Status.ToString());
+            var body =
+                EmailTemplateService.AppointmentBooked(
+                    patient.FullName,
+                    doctor.FullName,
+                    doctor.Department?.Name,
+                    appointment.AppointmentDate,
+                    appointment.Status.ToString());
 
-            await _emailService.SendEmailAsync(
-                patient.User!.Email,
-                "Appointment Booked Successfully",
-                body);
 
-            appointment = await _appointmentRepository.GetByIdAsync(appointment.Id);
+            if (patient.User != null)
+            {
+                await _emailService.SendEmailAsync(
+                    patient.User.Email,
+                    "Appointment Booked Successfully",
+                    body);
+            }
 
-            return _mapper.Map<AppointmentDto>(appointment);
+
+            // -------------------------------------------------
+            // GET CREATED APPOINTMENT
+            // -------------------------------------------------
+
+            appointment =
+                await _appointmentRepository
+                    .GetByIdAsync(
+                        appointment.Id);
+
+            return _mapper.Map<
+                AppointmentDto>(
+                    appointment);
         }
 
+
+        // =====================================================
+        // UPDATE
+        // =====================================================
+
         public async Task UpdateAsync(
-    int id,
-    UpdateAppointmentDto dto,
-    int userId,
-    string role)
+            int id,
+            UpdateAppointmentDto dto,
+            int userId,
+            string role)
         {
-            // Prevent past appointments
             if (dto.AppointmentDate < DateTime.Now)
             {
-                throw new BusinessException("Appointment date cannot be in the past.");
+                throw new BusinessException(
+                    "Appointment date cannot be in the past.");
             }
 
-            if (!IsValidAppointmentSlot(dto.AppointmentDate))
+
+            if (!IsValidAppointmentSlot(
+                dto.AppointmentDate))
             {
                 throw new BusinessException(
                     "Appointments can only be booked in 30-minute intervals.");
             }
 
-            // Check if appointment exists
-            var appointment = await _appointmentRepository.GetByIdAsync(id);
+
+            var appointment =
+                await _appointmentRepository
+                    .GetByIdAsync(id);
 
             if (appointment == null)
             {
-                throw new BusinessException("Appointment not found.");
+                throw new BusinessException(
+                    "Appointment not found.");
             }
 
-            // Validate Doctor
-            var selectedDoctor = await _doctorRepository.GetByIdAsync(dto.DoctorId);
+
+            // -------------------------------------------------
+            // DOCTOR
+            // -------------------------------------------------
+
+            var selectedDoctor =
+                await _doctorRepository
+                    .GetByIdAsync(
+                        dto.DoctorId);
 
             if (selectedDoctor == null)
             {
-                throw new BusinessException("Doctor not found.");
+                throw new BusinessException(
+                    "Doctor not found.");
             }
 
-            bool isWorking = IsDoctorWorking(
-    dto.AppointmentDate,
-    selectedDoctor.AvailableFrom,
-    selectedDoctor.AvailableTo);
+
+            bool isWorking =
+                IsDoctorWorking(
+                    dto.AppointmentDate,
+                    selectedDoctor.AvailableFrom,
+                    selectedDoctor.AvailableTo);
 
             if (!isWorking)
             {
@@ -246,180 +455,302 @@ namespace HospitalAPI.Services
             }
 
 
-            var onLeave = await _doctorLeaveRepository
-    .IsDoctorOnLeaveAsync(
-        selectedDoctor.Id,
-        dto.AppointmentDate);
+            var onLeave =
+                await _doctorLeaveRepository
+                    .IsDoctorOnLeaveAsync(
+                        selectedDoctor.Id,
+                        dto.AppointmentDate);
 
             if (onLeave)
             {
                 throw new BusinessException(
                     "Doctor is on approved leave.");
             }
-            // Validate Patient
-            var patient = await _patientRepository.GetByIdAsync(dto.PatientId);
+
+
+            // -------------------------------------------------
+            // PATIENT
+            // -------------------------------------------------
+
+            var patient =
+                await _patientRepository
+                    .GetByIdAsync(
+                        dto.PatientId);
 
             if (patient == null)
             {
-                throw new BusinessException("Patient not found.");
+                throw new BusinessException(
+                    "Patient not found.");
             }
 
-            // Check doctor's availability (ignore the current appointment)
-            var isAvailable = await _appointmentRepository
-                .IsDoctorAvailableForUpdateAsync(
-                    id,
-                    dto.DoctorId,
-                    dto.AppointmentDate);
+
+            // -------------------------------------------------
+            // DOCTOR AUTHORIZATION
+            // -------------------------------------------------
+
+            if (role == "Doctor")
+            {
+                var loggedInDoctor =
+                    await _doctorRepository
+                        .GetByUserIdAsync(userId);
+
+                if (loggedInDoctor == null)
+                {
+                    throw new BusinessException(
+                        "Doctor profile not found.");
+                }
+
+                if (appointment.DoctorId !=
+                    loggedInDoctor.Id)
+                {
+                    throw new BusinessException(
+                        "You are not authorized to update this appointment.");
+                }
+            }
+
+
+            // -------------------------------------------------
+            // AVAILABILITY
+            // -------------------------------------------------
+
+            var isAvailable =
+                await _appointmentRepository
+                    .IsDoctorAvailableForUpdateAsync(
+                        id,
+                        dto.DoctorId,
+                        dto.AppointmentDate);
 
             if (!isAvailable)
             {
-                throw new BusinessException("Doctor already has an appointment at this time.");
+                throw new BusinessException(
+                    "Doctor already has an appointment at this time.");
             }
 
 
+            // -------------------------------------------------
+            // UPDATE
+            // -------------------------------------------------
 
-            // Admin can update everything
-            if (role == "Doctor")
-            {
-                var loggedInDoctor = await _doctorRepository.GetByUserIdAsync(userId);
+            _mapper.Map(
+                dto,
+                appointment);
 
-                if (loggedInDoctor == null)
-                    throw new BusinessException("Doctor profile not found.");
+            await _appointmentRepository
+                .UpdateAsync(appointment);
 
-                if (appointment.DoctorId != loggedInDoctor.Id)
-                    throw new BusinessException("You are not authorized to update this appointment.");
-            }
-
-
-            // Update appointment
-            _mapper.Map(dto, appointment);
-
-            await _appointmentRepository.UpdateAsync(appointment);
-            await _appointmentRepository.SaveChangesAsync();
-
-            
+            await _appointmentRepository
+                .SaveChangesAsync();
         }
+
+
+        // =====================================================
+        // DELETE
+        // =====================================================
 
         public async Task DeleteAsync(
-    int id,
-    int userId,
-    string role)
+            int id,
+            int userId,
+            string role)
         {
-            var appointment = await _appointmentRepository.GetByIdAsync(id);
+            var appointment =
+                await _appointmentRepository
+                    .GetByIdAsync(id);
 
             if (appointment == null)
             {
-                throw new BusinessException("Appointment not found.");
+                throw new BusinessException(
+                    "Appointment not found.");
             }
 
-            // Doctor can delete only their own appointments
+
             if (role == "Doctor")
             {
-                var loggedInDoctor = await _doctorRepository.GetByUserIdAsync(userId);
+                var doctor =
+                    await _doctorRepository
+                        .GetByUserIdAsync(userId);
 
-                if (loggedInDoctor == null)
-                    throw new BusinessException("Doctor profile not found.");
+                if (doctor == null)
+                {
+                    throw new BusinessException(
+                        "Doctor profile not found.");
+                }
 
-                if (appointment.DoctorId != loggedInDoctor.Id)
-                    throw new BusinessException("You are not authorized to delete this appointment.");
+                if (appointment.DoctorId != doctor.Id)
+                {
+                    throw new BusinessException(
+                        "You are not authorized to delete this appointment.");
+                }
             }
 
-            // Admin reaches here automatically
-            await _appointmentRepository.DeleteAsync(appointment);
-            await _appointmentRepository.SaveChangesAsync();
+
+            await _appointmentRepository
+                .DeleteAsync(appointment);
+
+            await _appointmentRepository
+                .SaveChangesAsync();
         }
 
+
+        // =====================================================
+        // APPROVE
+        // =====================================================
 
         public async Task ApproveAppointmentAsync(
-    int appointmentId,
-    int userId,
-    string role)
+            int appointmentId,
+            int userId,
+            string role)
         {
-            var appointment = await _appointmentRepository
-                .GetByIdAsync(appointmentId);
+            var appointment =
+                await _appointmentRepository
+                    .GetByIdAsync(
+                        appointmentId);
 
             if (appointment == null)
-                throw new BusinessException("Appointment not found.");
+            {
+                throw new BusinessException(
+                    "Appointment not found.");
+            }
 
-            // Only doctor assigned to this appointment can approve it
+
             if (role == "Doctor")
             {
-                var doctor = await _doctorRepository.GetByUserIdAsync(userId);
+                var doctor =
+                    await _doctorRepository
+                        .GetByUserIdAsync(userId);
 
                 if (doctor == null)
-                    throw new BusinessException("Doctor profile not found.");
+                {
+                    throw new BusinessException(
+                        "Doctor profile not found.");
+                }
 
                 if (appointment.DoctorId != doctor.Id)
-                    throw new BusinessException("You are not authorized.");
+                {
+                    throw new BusinessException(
+                        "You are not authorized.");
+                }
             }
 
-            if (appointment.Status != AppointmentStatus.Pending)
-                throw new BusinessException("Only pending appointments can be approved.");
 
-            appointment.Status = AppointmentStatus.Approved;
+            if (appointment.Status !=
+                AppointmentStatus.Pending)
+            {
+                throw new BusinessException(
+                    "Only pending appointments can be approved.");
+            }
 
-            await _appointmentRepository.UpdateAsync(appointment);
-            await _appointmentRepository.SaveChangesAsync();
 
-            appointment = await _appointmentRepository.GetByIdAsync(appointment.Id);
+            appointment.Status =
+                AppointmentStatus.Approved;
+
+
+            await _appointmentRepository
+                .UpdateAsync(appointment);
+
+            await _appointmentRepository
+                .SaveChangesAsync();
+
+
+            appointment =
+                await _appointmentRepository
+                    .GetByIdAsync(
+                        appointment.Id);
 
             if (appointment == null)
             {
-                throw new BusinessException("Appointment not found.");
+                throw new BusinessException(
+                    "Appointment not found.");
             }
 
 
-            await _emailService.SendEmailAsync(
-                appointment.Patient!.User!.Email,
-                "Appointment Approved",
-                EmailTemplateService.AppointmentApproved(
-                    appointment.Patient.FullName,
-                    appointment.Doctor!.FullName,
-                    appointment.AppointmentDate));
+            if (appointment.Patient?.User != null &&
+                appointment.Doctor != null)
+            {
+                await _emailService.SendEmailAsync(
+                    appointment.Patient.User.Email,
+                    "Appointment Approved",
+                    EmailTemplateService.AppointmentApproved(
+                        appointment.Patient.FullName,
+                        appointment.Doctor.FullName,
+                        appointment.AppointmentDate));
+            }
         }
 
 
+        // =====================================================
+        // COMPLETE
+        // =====================================================
 
         public async Task CompleteAppointmentAsync(
-    int appointmentId,
-    int userId,
-    string role)
+            int appointmentId,
+            int userId,
+            string role)
         {
-            var appointment = await _appointmentRepository.GetByIdAsync(appointmentId);
+            var appointment =
+                await _appointmentRepository
+                    .GetByIdAsync(
+                        appointmentId);
 
             if (appointment == null)
-                throw new BusinessException("Appointment not found.");
-
-            // Doctor authorization
-            if (role == "Doctor")
             {
-                var doctor = await _doctorRepository.GetByUserIdAsync(userId);
-
-                if (doctor == null)
-                    throw new BusinessException("Doctor profile not found.");
-
-                if (appointment.DoctorId != doctor.Id)
-                    throw new BusinessException("You are not authorized.");
+                throw new BusinessException(
+                    "Appointment not found.");
             }
 
-            // Business rule
-            if (appointment.Status != AppointmentStatus.Approved)
-                throw new BusinessException("Only approved appointments can be completed.");
 
-            appointment.Status = AppointmentStatus.Completed;
+            if (role == "Doctor")
+            {
+                var doctor =
+                    await _doctorRepository
+                        .GetByUserIdAsync(userId);
 
-            await _appointmentRepository.UpdateAsync(appointment);
-            await _appointmentRepository.SaveChangesAsync();
+                if (doctor == null)
+                {
+                    throw new BusinessException(
+                        "Doctor profile not found.");
+                }
 
-            appointment = await _appointmentRepository.GetByIdAsync(appointment.Id);
+                if (appointment.DoctorId != doctor.Id)
+                {
+                    throw new BusinessException(
+                        "You are not authorized.");
+                }
+            }
+
+
+            if (appointment.Status !=
+                AppointmentStatus.Approved)
+            {
+                throw new BusinessException(
+                    "Only approved appointments can be completed.");
+            }
+
+
+            appointment.Status =
+                AppointmentStatus.Completed;
+
+
+            await _appointmentRepository
+                .UpdateAsync(appointment);
+
+            await _appointmentRepository
+                .SaveChangesAsync();
+
+
+            appointment =
+                await _appointmentRepository
+                    .GetByIdAsync(
+                        appointment.Id);
 
             if (appointment == null ||
                 appointment.Patient == null ||
                 appointment.Patient.User == null ||
                 appointment.Doctor == null)
             {
-                throw new BusinessException("Appointment data is incomplete.");
+                throw new BusinessException(
+                    "Appointment data is incomplete.");
             }
+
 
             await _emailService.SendEmailAsync(
                 appointment.Patient.User.Email,
@@ -431,53 +762,122 @@ namespace HospitalAPI.Services
         }
 
 
+        // =====================================================
+        // CANCEL
+        // =====================================================
+
         public async Task CancelAppointmentAsync(
-    int appointmentId,
-    int userId,
-    string role)
+            int appointmentId,
+            int userId,
+            string role)
         {
-            var appointment = await _appointmentRepository.GetByIdAsync(appointmentId);
+            var appointment =
+                await _appointmentRepository
+                    .GetByIdAsync(
+                        appointmentId);
 
             if (appointment == null)
-                throw new BusinessException("Appointment not found.");
+            {
+                throw new BusinessException(
+                    "Appointment not found.");
+            }
 
-            // Doctor authorization
+
+            // -------------------------------------------------
+            // DOCTOR
+            // -------------------------------------------------
+
             if (role == "Doctor")
             {
-                var doctor = await _doctorRepository.GetByUserIdAsync(userId);
+                var doctor =
+                    await _doctorRepository
+                        .GetByUserIdAsync(userId);
 
                 if (doctor == null)
-                    throw new BusinessException("Doctor profile not found.");
+                {
+                    throw new BusinessException(
+                        "Doctor profile not found.");
+                }
 
-                if (appointment.DoctorId != doctor.Id)
-                    throw new BusinessException("You are not authorized.");
+                if (appointment.DoctorId !=
+                    doctor.Id)
+                {
+                    throw new BusinessException(
+                        "You are not authorized.");
+                }
             }
 
-            // Business Rule
-            if (appointment.Status == AppointmentStatus.Completed)
+
+            // -------------------------------------------------
+            // PATIENT
+            // -------------------------------------------------
+
+            if (role == "Patient")
             {
-                throw new BusinessException("Completed appointments cannot be cancelled.");
+                var patient =
+                    await _patientRepository
+                        .GetByUserIdAsync(userId);
+
+                if (patient == null)
+                {
+                    throw new BusinessException(
+                        "Patient profile not found.");
+                }
+
+                if (appointment.PatientId !=
+                    patient.Id)
+                {
+                    throw new BusinessException(
+                        "You are not authorized to cancel this appointment.");
+                }
             }
 
-            if (appointment.Status == AppointmentStatus.Cancelled)
+
+            // -------------------------------------------------
+            // STATUS
+            // -------------------------------------------------
+
+            if (appointment.Status ==
+                AppointmentStatus.Completed)
             {
-                throw new BusinessException("Appointment is already cancelled.");
+                throw new BusinessException(
+                    "Completed appointments cannot be cancelled.");
             }
 
-            appointment.Status = AppointmentStatus.Cancelled;
 
-            await _appointmentRepository.UpdateAsync(appointment);
-            await _appointmentRepository.SaveChangesAsync();
+            if (appointment.Status ==
+                AppointmentStatus.Cancelled)
+            {
+                throw new BusinessException(
+                    "Appointment is already cancelled.");
+            }
 
-            appointment = await _appointmentRepository.GetByIdAsync(appointment.Id);
+
+            appointment.Status =
+                AppointmentStatus.Cancelled;
+
+
+            await _appointmentRepository
+                .UpdateAsync(appointment);
+
+            await _appointmentRepository
+                .SaveChangesAsync();
+
+
+            appointment =
+                await _appointmentRepository
+                    .GetByIdAsync(
+                        appointment.Id);
 
             if (appointment == null ||
                 appointment.Patient == null ||
                 appointment.Patient.User == null ||
                 appointment.Doctor == null)
             {
-                throw new BusinessException("Appointment data is incomplete.");
+                throw new BusinessException(
+                    "Appointment data is incomplete.");
             }
+
 
             await _emailService.SendEmailAsync(
                 appointment.Patient.User.Email,
@@ -489,25 +889,45 @@ namespace HospitalAPI.Services
         }
 
 
-        private bool IsDoctorWorking(
-    DateTime appointmentDate,
-    string availableFrom,
-    string availableTo)
-        {
-            TimeSpan appointmentTime = appointmentDate.TimeOfDay;
+        // =====================================================
+        // DOCTOR WORKING HOURS
+        // =====================================================
 
-            TimeSpan from = TimeSpan.Parse(availableFrom);
-            TimeSpan to = TimeSpan.Parse(availableTo);
+        private bool IsDoctorWorking(
+            DateTime appointmentDate,
+            string availableFrom,
+            string availableTo)
+        {
+            TimeSpan appointmentTime =
+                appointmentDate.TimeOfDay;
+
+            TimeSpan from =
+                TimeSpan.Parse(
+                    availableFrom);
+
+            TimeSpan to =
+                TimeSpan.Parse(
+                    availableTo);
 
             return appointmentTime >= from &&
                    appointmentTime <= to;
         }
 
-        private bool IsValidAppointmentSlot(DateTime appointmentDate)
+
+        // =====================================================
+        // APPOINTMENT SLOT
+        // =====================================================
+
+        private bool IsValidAppointmentSlot(
+            DateTime appointmentDate)
         {
-            return (appointmentDate.Minute == 0 ||
-                    appointmentDate.Minute == 30)
-                   && appointmentDate.Second == 0;
+            return
+                (appointmentDate.Minute == 0 ||
+                 appointmentDate.Minute == 30)
+                &&
+                appointmentDate.Second == 0
+                &&
+                appointmentDate.Millisecond == 0;
         }
     }
 }

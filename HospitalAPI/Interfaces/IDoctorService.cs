@@ -8,10 +8,14 @@ namespace HospitalAPI.Interfaces
 
         Task<DoctorDto?> GetByIdAsync(int id);
 
-        Task<DoctorDto> AddAsync(CreateDoctorDto dto);
+        Task<DoctorDto> AddAsync(
+            CreateDoctorDto dto);
 
-        Task UpdateAsync(int id, UpdateDoctorDto dto);
+        Task UpdateAsync(
+            int id,
+            UpdateDoctorDto dto);
 
-        Task DeleteAsync(int id);
+        Task DeleteAsync(
+            int id);
     }
 }
