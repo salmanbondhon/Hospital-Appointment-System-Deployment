@@ -6,14 +6,14 @@ namespace HospitalAPI.Services
 {
     public class MedicalRecordService : IMedicalRecordService
     {
-        private readonly IPrescriptionRepository _prescriptionRepository;
+        private readonly IMedicalRecordRepository _medicalRecordRepository;
         private readonly IPatientRepository _patientRepository;
 
         public MedicalRecordService(
-            IPrescriptionRepository prescriptionRepository,
+            IMedicalRecordRepository medicalRecordRepository,
             IPatientRepository patientRepository)
         {
-            _prescriptionRepository = prescriptionRepository;
+            _medicalRecordRepository = medicalRecordRepository;
             _patientRepository = patientRepository;
         }
 
@@ -22,30 +22,52 @@ namespace HospitalAPI.Services
             int userId,
             string role)
         {
-            // Patient can only view their own history
+            // =========================================
+            // PATIENT AUTHORIZATION
+            // =========================================
+
             if (role == "Patient")
             {
-                var patient = await _patientRepository.GetByUserIdAsync(userId);
+                var patient =
+                    await _patientRepository.GetByUserIdAsync(userId);
 
                 if (patient == null)
-                    throw new BusinessException("Patient profile not found.");
+                    throw new BusinessException(
+                        "Patient profile not found.");
 
                 if (patient.Id != patientId)
-                    throw new BusinessException("You are not authorized.");
+                    throw new BusinessException(
+                        "You are not authorized.");
             }
 
-            // Admin and Doctor can view any patient's history
+            // =========================================
+            // GET MEDICAL HISTORY
+            // =========================================
 
-            var prescriptions = await _prescriptionRepository
-                .GetPatientHistoryAsync(patientId);
+            var prescriptions =
+                await _medicalRecordRepository
+                    .GetPatientHistoryAsync(patientId);
+
+            // =========================================
+            // CONVERT TO DTO
+            // =========================================
 
             return prescriptions.Select(p => new MedicalRecordDto
             {
-                AppointmentDate = p.Appointment!.AppointmentDate,
-                DoctorName = p.Appointment.Doctor!.FullName,
-                Diagnosis = p.Diagnosis,
-                Medicines = p.Medicines,
-                Notes = p.Notes
+                AppointmentDate =
+                    p.Appointment!.AppointmentDate,
+
+                DoctorName =
+                    p.Appointment.Doctor!.FullName,
+
+                Diagnosis =
+                    p.Diagnosis,
+
+                Medicines =
+                    p.Medicines,
+
+                Notes =
+                    p.Notes
             });
         }
     }

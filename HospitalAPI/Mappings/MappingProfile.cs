@@ -94,6 +94,8 @@ namespace HospitalAPI.Mappings
 
             CreateMap<CreatePrescriptionDto, Prescription>();
 
+            CreateMap<UpdatePrescriptionDto, Prescription>();
+
             CreateMap<Prescription, PrescriptionDto>()
 
                 .ForMember(

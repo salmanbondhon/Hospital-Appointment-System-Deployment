@@ -12,62 +12,88 @@ namespace HospitalAPI.Controllers
     {
         private readonly IPrescriptionService _service;
 
-        public PrescriptionController(IPrescriptionService service)
+        public PrescriptionController(
+            IPrescriptionService service)
         {
             _service = service;
         }
 
+
         // ===========================
-        // Create Prescription
+        // CREATE PRESCRIPTION
         // Doctor Only
         // ===========================
         [Authorize(Roles = "Doctor")]
         [HttpPost]
-        public async Task<IActionResult> Create(CreatePrescriptionDto dto)
+        public async Task<IActionResult> Create(
+            CreatePrescriptionDto dto)
         {
             int userId = int.Parse(
-                User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+                User.FindFirst(
+                    ClaimTypes.NameIdentifier)!.Value);
 
-            var prescription = await _service.CreateAsync(dto, userId);
+            var prescription =
+                await _service.CreateAsync(
+                    dto,
+                    userId);
 
             return Ok(new
             {
                 Success = true,
-                Message = "Prescription created successfully.",
+                Message =
+                    "Prescription created successfully.",
                 Data = prescription
             });
         }
 
+
         // ===========================
-        // Get All Prescriptions
+        // GET ALL PRESCRIPTIONS
+        // Admin + Doctor + Patient
         // ===========================
         [Authorize(Roles = "Admin,Doctor,Patient")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
             int userId = int.Parse(
-                User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+                User.FindFirst(
+                    ClaimTypes.NameIdentifier)!.Value);
 
-            string role = User.FindFirst(ClaimTypes.Role)!.Value;
+            string role =
+                User.FindFirst(
+                    ClaimTypes.Role)!.Value;
 
-            var prescriptions = await _service.GetAllAsync(userId, role);
+            var prescriptions =
+                await _service.GetAllAsync(
+                    userId,
+                    role);
 
             return Ok(prescriptions);
         }
 
+
         // ===========================
-        // Get Prescription By Id
+        // GET PRESCRIPTION BY ID
+        // Admin + Doctor + Patient
         // ===========================
         [Authorize(Roles = "Admin,Doctor,Patient")]
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetById(
+            int id)
         {
             int userId = int.Parse(
-                User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+                User.FindFirst(
+                    ClaimTypes.NameIdentifier)!.Value);
 
-            string role = User.FindFirst(ClaimTypes.Role)!.Value;
+            string role =
+                User.FindFirst(
+                    ClaimTypes.Role)!.Value;
 
-            var prescription = await _service.GetByIdAsync(id, userId, role);
+            var prescription =
+                await _service.GetByIdAsync(
+                    id,
+                    userId,
+                    role);
 
             if (prescription == null)
                 return NotFound();
@@ -75,20 +101,69 @@ namespace HospitalAPI.Controllers
             return Ok(prescription);
         }
 
+
         // ===========================
-        // Delete Prescription
-        // Admin Only
+        // UPDATE PRESCRIPTION
+        // Admin + Doctor
         // ===========================
-        [Authorize(Roles = "Admin")]
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        [Authorize(Roles = "Admin,Doctor")]
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(
+            int id,
+            UpdatePrescriptionDto dto)
         {
-            await _service.DeleteAsync(id);
+            int userId = int.Parse(
+                User.FindFirst(
+                    ClaimTypes.NameIdentifier)!.Value);
+
+            string role =
+                User.FindFirst(
+                    ClaimTypes.Role)!.Value;
+
+            var prescription =
+                await _service.UpdateAsync(
+                    id,
+                    dto,
+                    userId,
+                    role);
 
             return Ok(new
             {
                 Success = true,
-                Message = "Prescription deleted successfully."
+                Message =
+                    "Prescription updated successfully.",
+                Data = prescription
+            });
+        }
+
+
+        // ===========================
+        // DELETE PRESCRIPTION
+        // Admin + Doctor
+        // ===========================
+        [Authorize(Roles = "Admin,Doctor")]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(
+            int id)
+        {
+            int userId = int.Parse(
+                User.FindFirst(
+                    ClaimTypes.NameIdentifier)!.Value);
+
+            string role =
+                User.FindFirst(
+                    ClaimTypes.Role)!.Value;
+
+            await _service.DeleteAsync(
+                id,
+                userId,
+                role);
+
+            return Ok(new
+            {
+                Success = true,
+                Message =
+                    "Prescription deleted successfully."
             });
         }
     }

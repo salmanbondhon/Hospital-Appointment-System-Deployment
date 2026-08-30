@@ -12,23 +12,32 @@ namespace HospitalAPI.Controllers
     {
         private readonly IMedicalRecordService _service;
 
-        public MedicalRecordController(IMedicalRecordService service)
+        public MedicalRecordController(
+            IMedicalRecordService service)
         {
             _service = service;
         }
 
+        // =========================================
+        // GET PATIENT MEDICAL HISTORY
+        // =========================================
+
         [HttpGet("patient/{patientId}")]
-        public async Task<IActionResult> GetPatientHistory(int patientId)
+        public async Task<IActionResult> GetPatientHistory(
+            int patientId)
         {
             int userId = int.Parse(
-                User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+                User.FindFirst(
+                    ClaimTypes.NameIdentifier)!.Value);
 
-            string role = User.FindFirst(ClaimTypes.Role)!.Value;
+            string role = User.FindFirst(
+                ClaimTypes.Role)!.Value;
 
-            var history = await _service.GetPatientHistoryAsync(
-                patientId,
-                userId,
-                role);
+            var history =
+                await _service.GetPatientHistoryAsync(
+                    patientId,
+                    userId,
+                    role);
 
             return Ok(history);
         }

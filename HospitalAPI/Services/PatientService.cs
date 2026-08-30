@@ -57,6 +57,25 @@ namespace HospitalAPI.Services
 
 
         // =================================================
+        // GET CURRENT LOGGED-IN PATIENT
+        // =================================================
+
+        public async Task<PatientDto?> GetMyProfileAsync(
+            int userId)
+        {
+            var patient =
+                await _repository.GetByUserIdAsync(userId);
+
+            if (patient == null)
+            {
+                return null;
+            }
+
+            return _mapper.Map<PatientDto>(patient);
+        }
+
+
+        // =================================================
         // CREATE PATIENT
         // =================================================
 

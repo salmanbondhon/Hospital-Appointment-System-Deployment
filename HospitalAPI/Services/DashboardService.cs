@@ -47,10 +47,13 @@ namespace HospitalAPI.Services
                     .CountAsync(a => a.Status == Enums.AppointmentStatus.Cancelled),
 
                 DoctorsOnLeaveToday = await _context.DoctorLeaves
-                    .CountAsync(l =>
-                        l.IsApproved &&
-                        l.StartDate.Date <= today &&
-                        l.EndDate.Date >= today),
+    .Where(l =>
+        l.IsApproved &&
+        l.StartDate.Date <= today &&
+        l.EndDate.Date >= today)
+    .Select(l => l.DoctorId)
+    .Distinct()
+    .CountAsync(),
 
                 TotalPrescriptions = await _context.Prescriptions.CountAsync()
             };

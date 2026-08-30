@@ -37,6 +37,51 @@ namespace HospitalAPI.Controllers
 
 
         // =================================================
+        // GET CURRENT LOGGED-IN PATIENT
+        // =================================================
+
+        [Authorize(Roles = "Patient")]
+        [HttpGet("me")]
+        public async Task<IActionResult> GetMyProfile()
+        {
+            var userIdClaim =
+                User.FindFirst(
+                    ClaimTypes.NameIdentifier);
+
+            if (userIdClaim == null)
+            {
+                return Unauthorized();
+            }
+
+
+            int userId =
+                int.Parse(userIdClaim.Value);
+
+
+            var patient =
+                await _service.GetMyProfileAsync(
+                    userId);
+
+
+            if (patient == null)
+            {
+                return NotFound(new ApiResponse<object>
+                {
+                    Success = false,
+
+                    Message =
+                        "Patient profile not found.",
+
+                    Data = null
+                });
+            }
+
+
+            return Ok(patient);
+        }
+
+
+        // =================================================
         // GET BY ID
         // =================================================
 
