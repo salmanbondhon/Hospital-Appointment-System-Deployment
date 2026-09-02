@@ -8,6 +8,9 @@ namespace HospitalAPI.Interfaces
 
         Task<DoctorDto?> GetByIdAsync(int id);
 
+        Task<DoctorDto?> GetMyProfileAsync(int userId);
+
+
         Task<DoctorDto> AddAsync(
             CreateDoctorDto dto);
 

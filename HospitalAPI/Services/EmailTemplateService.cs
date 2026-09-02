@@ -338,5 +338,110 @@ Hospital Management System
 
 
 
+    
+
+
+    public static string PasswordReset(
+    string userName,
+    string resetLink)
+        {
+            return $@"
+<!DOCTYPE html>
+<html>
+<head>
+
+<style>
+
+body {{
+    font-family: Arial;
+    background: #f5f5f5;
+    padding: 20px;
+}}
+
+.container {{
+    max-width: 650px;
+    margin: auto;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+}}
+
+.header {{
+    background: #0d6efd;
+    color: white;
+    padding: 20px;
+    text-align: center;
+}}
+
+.content {{
+    padding: 25px;
+}}
+
+.button {{
+    display: inline-block;
+    padding: 12px 25px;
+    background: #0d6efd;
+    color: white !important;
+    text-decoration: none;
+    border-radius: 6px;
+    margin-top: 15px;
+}}
+
+.footer {{
+    background: #eee;
+    padding: 15px;
+    text-align: center;
+    font-size: 12px;
+}}
+
+</style>
+
+</head>
+
+<body>
+
+<div class='container'>
+
+<div class='header'>
+<h2>🔐 Password Reset</h2>
+</div>
+
+<div class='content'>
+
+<p>Hello <strong>{userName}</strong>,</p>
+
+<p>
+We received a request to reset your password.
+</p>
+
+<p>
+Click the button below to create a new password.
+</p>
+
+<p>
+<a href='{resetLink}' class='button'>
+Reset Password
+</a>
+</p>
+
+<p>
+This link will expire in <strong>30 minutes</strong>.
+</p>
+
+<p>
+If you did not request a password reset, you can safely ignore this email.
+</p>
+
+</div>
+
+<div class='footer'>
+Hospital Management System
+</div>
+
+</div>
+
+</body>
+</html>";
+        }
     }
 }

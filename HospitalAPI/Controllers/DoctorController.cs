@@ -3,6 +3,7 @@ using HospitalAPI.Interfaces;
 using HospitalAPI.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace HospitalAPI.Controllers
 {
@@ -35,6 +36,44 @@ namespace HospitalAPI.Controllers
 
 
         // =====================================================
+        // GET CURRENT LOGGED-IN DOCTOR
+        // =====================================================
+
+        [Authorize(Roles = "Doctor")]
+        [HttpGet("me")]
+        public async Task<IActionResult> GetMyProfile()
+        {
+            var userIdClaim =
+                User.FindFirst(ClaimTypes.NameIdentifier);
+
+            if (userIdClaim == null)
+            {
+                return Unauthorized();
+            }
+
+            int userId =
+                int.Parse(userIdClaim.Value);
+
+            var doctor =
+                await _service.GetMyProfileAsync(userId);
+
+            if (doctor == null)
+            {
+                return NotFound(new ApiResponse<object>
+                {
+                    Success = false,
+
+                    Message =
+                        "Doctor profile not found.",
+
+                    Data = null
+                });
+            }
+
+            return Ok(doctor);
+        }
+
+        // =====================================================
         // GET BY ID
         // =====================================================
 
@@ -52,6 +91,10 @@ namespace HospitalAPI.Controllers
 
             return Ok(doctor);
         }
+
+
+       
+
 
 
         // =====================================================

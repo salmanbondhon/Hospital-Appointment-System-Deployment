@@ -143,6 +143,8 @@ namespace HospitalAPI.Mappings
 
 
             CreateMap<CreateLeaveDto, DoctorLeave>();
+
+            CreateMap<Notification, NotificationDto>();
         }
     }
 }

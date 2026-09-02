@@ -1,8 +1,11 @@
 ﻿using AutoMapper;
 using HospitalAPI.DTOs;
+using HospitalAPI.Enums;
 using HospitalAPI.Exceptions;
 using HospitalAPI.Interfaces;
 using HospitalAPI.Models;
+using Microsoft.EntityFrameworkCore;
+using HospitalAPI.Data;
 
 namespace HospitalAPI.Services
 {
@@ -10,16 +13,22 @@ namespace HospitalAPI.Services
     {
         private readonly IDoctorLeaveRepository _leaveRepository;
         private readonly IDoctorRepository _doctorRepository;
+        private readonly INotificationService _notificationService;
+        private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
 
         public DoctorLeaveService(
-            IDoctorLeaveRepository leaveRepository,
-            IDoctorRepository doctorRepository,
-            IMapper mapper)
+    IDoctorLeaveRepository leaveRepository,
+    IDoctorRepository doctorRepository,
+    INotificationService notificationService,
+    IMapper mapper,
+    ApplicationDbContext context)
         {
             _leaveRepository = leaveRepository;
             _doctorRepository = doctorRepository;
+            _notificationService = notificationService;
             _mapper = mapper;
+            _context = context;
         }
 
         public async Task<IEnumerable<DoctorLeaveDto>> GetAllAsync()
@@ -78,6 +87,21 @@ namespace HospitalAPI.Services
             await _leaveRepository.AddAsync(leave);
             await _leaveRepository.SaveChangesAsync();
 
+            var adminUsers = await _context.Users
+    .Where(u => u.Role == UserRole.Admin)
+    .ToListAsync();
+
+            foreach (var admin in adminUsers)
+            {
+                await _notificationService.CreateNotificationAsync(
+                    admin.Id,
+                    "Doctor Leave Request",
+                    $"Dr. {doctor.FullName} has requested leave from " +
+                    $"{leave.StartDate:dd MMM yyyy} to " +
+                    $"{leave.EndDate:dd MMM yyyy}."
+                );
+            }
+
             leave = await _leaveRepository.GetByIdAsync(leave.Id);
 
             return _mapper.Map<DoctorLeaveDto>(leave);
@@ -97,6 +121,14 @@ namespace HospitalAPI.Services
 
             await _leaveRepository.UpdateAsync(leave);
             await _leaveRepository.SaveChangesAsync();
+
+            // Notify Doctor
+            await _notificationService.CreateNotificationAsync(
+                leave.Doctor.UserId,
+                "Leave Approved",
+                $"Your leave request from {leave.StartDate:dd MMM yyyy} " +
+                $"to {leave.EndDate:dd MMM yyyy} has been approved."
+            );
         }
 
 

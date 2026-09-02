@@ -41,5 +41,35 @@ namespace HospitalAPI.Controllers
                 Data = result
             });
         }
+
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword(
+    ForgotPasswordDto dto)
+        {
+            await _service.ForgotPasswordAsync(dto);
+
+            return Ok(new ApiResponse<object>
+            {
+                Success = true,
+                Message =
+                    "If an account exists for this email, a password reset link has been sent.",
+                Data = null
+            });
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword(
+    ResetPasswordDto dto)
+        {
+            await _service.ResetPasswordAsync(dto);
+
+            return Ok(new ApiResponse<object>
+            {
+                Success = true,
+                Message = "Password reset successfully.",
+                Data = null
+            });
+        }
     }
 }

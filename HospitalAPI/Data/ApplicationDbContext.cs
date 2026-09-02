@@ -34,6 +34,8 @@ namespace HospitalAPI.Data
 
         public DbSet<MedicalRecord> MedicalRecords { get; set; }
 
+        public DbSet<Notification> Notifications { get; set; }
+
 
         // =========================
         // Model Configuration
@@ -43,6 +45,15 @@ namespace HospitalAPI.Data
             ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+
+            // =========================
+            // Email Case Sensitive
+            // =========================
+
+            modelBuilder.Entity<User>()
+                .Property(u => u.Email)
+                .UseCollation("SQL_Latin1_General_CP1_CS_AS");
 
 
             // =========================
@@ -77,6 +88,17 @@ namespace HospitalAPI.Data
                 .HasForeignKey<Doctor>(d => d.UserId)
                 .OnDelete(DeleteBehavior.NoAction);
 
+
+            // =========================
+            // User - Notification
+            // One-to-Many
+            // =========================
+
+            modelBuilder.Entity<Notification>()
+                .HasOne(n => n.User)
+                .WithMany(u => u.Notifications)
+                .HasForeignKey(n => n.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // =========================
             // Doctor Leave - Doctor

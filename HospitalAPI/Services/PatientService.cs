@@ -333,12 +333,12 @@ namespace HospitalAPI.Services
             // UPDATE PASSWORD
             // =================================================
 
-            if (!string.IsNullOrWhiteSpace(dto.Password))
+           /* if (!string.IsNullOrWhiteSpace(dto.Password))
             {
                 user.PasswordHash =
                     BCrypt.Net.BCrypt.HashPassword(
                         dto.Password);
-            }
+            }*/
 
 
             // =================================================

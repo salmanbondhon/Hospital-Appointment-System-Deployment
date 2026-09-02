@@ -111,6 +111,59 @@ namespace HospitalAPI.Services
         }
 
 
+
+        // =====================================================
+        // GET CURRENT LOGGED-IN DOCTOR
+        // =====================================================
+
+        public async Task<DoctorDto?> GetMyProfileAsync(
+     int userId)
+        {
+            var doctor =
+                await _repository.GetByUserIdAsync(userId);
+
+            if (doctor == null)
+            {
+                return null;
+            }
+
+            return new DoctorDto
+            {
+                Id = doctor.Id,
+
+                FullName = doctor.FullName,
+
+                Email = doctor.User?.Email ?? string.Empty,
+
+                Specialization =
+                    doctor.Specialization,
+
+                Qualification =
+                    doctor.Qualification,
+
+                Experience =
+                    doctor.Experience,
+
+                ConsultationFee =
+                    doctor.ConsultationFee,
+
+                AvailableFrom =
+                    doctor.AvailableFrom,
+
+                AvailableTo =
+                    doctor.AvailableTo,
+
+                DepartmentId =
+                    doctor.DepartmentId,
+
+                DepartmentName =
+                    doctor.Department?.Name ?? string.Empty,
+
+                UserId =
+                    doctor.UserId
+            };
+        }
+
         // =====================================================
         // CREATE DOCTOR
         // =====================================================
@@ -340,13 +393,13 @@ namespace HospitalAPI.Services
             // UPDATE PASSWORD
             // =================================================
 
-            if (!string.IsNullOrWhiteSpace(dto.Password))
+           /* if (!string.IsNullOrWhiteSpace(dto.Password))
             {
                 user.PasswordHash =
                     BCrypt.Net.BCrypt.HashPassword(
                         dto.Password);
             }
-
+           */
 
             // =================================================
             // SAVE CHANGES

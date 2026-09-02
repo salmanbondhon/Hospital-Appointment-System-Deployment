@@ -10,5 +10,13 @@ namespace HospitalAPI.Interfaces
 
         Task<IEnumerable<UserDto>> GetAvailableDoctorUsersAsync();
         Task<IEnumerable<UserDto>> GetAvailablePatientUsersAsync();
+
+        Task ForgotPasswordAsync(ForgotPasswordDto dto);
+
+        Task ResetPasswordAsync(ResetPasswordDto dto);
+
+        Task ChangePasswordAsync(
+    int userId,
+    ChangePasswordDto dto);
     }
 }

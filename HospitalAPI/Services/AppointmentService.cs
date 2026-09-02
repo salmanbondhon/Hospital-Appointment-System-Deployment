@@ -13,6 +13,7 @@ namespace HospitalAPI.Services
         private readonly IDoctorRepository _doctorRepository;
         private readonly IPatientRepository _patientRepository;
         private readonly IDoctorLeaveRepository _doctorLeaveRepository;
+        private readonly INotificationService _notificationService;
         private readonly IEmailService _emailService;
         private readonly IMapper _mapper;
 
@@ -22,6 +23,7 @@ namespace HospitalAPI.Services
             IDoctorRepository doctorRepository,
             IPatientRepository patientRepository,
             IDoctorLeaveRepository doctorLeaveRepository,
+            INotificationService notificationService,
             IMapper mapper,
             IEmailService emailService)
         {
@@ -36,6 +38,8 @@ namespace HospitalAPI.Services
 
             _doctorLeaveRepository =
                 doctorLeaveRepository;
+            _notificationService = 
+                notificationService;
 
             _mapper = mapper;
 
@@ -643,6 +647,12 @@ namespace HospitalAPI.Services
             appointment.Status =
                 AppointmentStatus.Approved;
 
+            await _notificationService.CreateNotificationAsync(
+     appointment.Patient.UserId,
+     "Appointment Approved",
+     $"Your appointment with Dr. {appointment.Doctor.FullName} has been approved."
+ );
+
 
             await _appointmentRepository
                 .UpdateAsync(appointment);
@@ -728,6 +738,13 @@ namespace HospitalAPI.Services
 
             appointment.Status =
                 AppointmentStatus.Completed;
+
+
+            await _notificationService.CreateNotificationAsync(
+    appointment.Patient.UserId,
+    "Appointment Completed",
+    $"Your appointment with Dr. {appointment.Doctor.FullName} has been completed."
+);
 
 
             await _appointmentRepository
@@ -855,6 +872,19 @@ namespace HospitalAPI.Services
 
             appointment.Status =
                 AppointmentStatus.Cancelled;
+
+
+            await _notificationService.CreateNotificationAsync(
+    appointment.Patient.UserId,
+    "Appointment Cancelled",
+    $"Your appointment with Dr. {appointment.Doctor.User.FullName} has been cancelled."
+);
+
+            await _notificationService.CreateNotificationAsync(
+    appointment.Doctor.UserId,
+    "Appointment Cancelled",
+    $"The appointment with {appointment.Patient.User.FullName} has been cancelled."
+);
 
 
             await _appointmentRepository

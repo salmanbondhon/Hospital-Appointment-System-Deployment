@@ -22,7 +22,14 @@ namespace HospitalAPI.Models
 
         public Patient? Patient { get; set; }
 
-        // ADD THIS
         public Doctor? Doctor { get; set; }
+
+        public ICollection<Notification> Notifications { get; set; }
+            = new List<Notification>();
+
+        // Password Reset
+        public string? PasswordResetToken { get; set; }
+
+        public DateTime? PasswordResetTokenExpiry { get; set; }
     }
 }
