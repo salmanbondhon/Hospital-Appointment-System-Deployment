@@ -30,15 +30,18 @@ namespace HospitalAPI
             builder.Services.AddControllers();
 
 
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy("AllowAngular", policy =>
-                {
-                    policy.WithOrigins("http://localhost:4200")
-                          .AllowAnyHeader()
-                          .AllowAnyMethod();
-                });
-            });
+           builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngular", policy =>
+    {
+        policy.WithOrigins(
+            "http://localhost:4200",
+            "https://purple-ocean-0b74bca00.5.azurestaticapps.net"
+        )
+        .AllowAnyHeader()
+        .AllowAnyMethod();
+    });
+});
 
 
             builder.Services.Configure<JwtSettings>(
